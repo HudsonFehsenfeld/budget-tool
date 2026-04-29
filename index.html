@@ -345,11 +345,13 @@
 
     <section id="closeout" class="section card">
       <div class="section-title"><h2>Month-End Closeout</h2></div>
+      <p class="small-note" style="margin-bottom:12px;">Use this tab at the end of each month to decide where leftover money goes. The default move is to push extra cash toward next year’s Roth IRA or additional investment savings.</p>
       <div class="month-closeout" id="closeoutContent"></div>
     </section>
 
     <section id="yoy" class="section card">
       <div class="section-title"><h2>January through December View</h2></div>
+      <p class="small-note" style="margin-bottom:12px;">Use this tab to compare months side by side and spot trends across the full year. It helps you see whether your lifestyle is staying controlled as income, commissions, and spending change.</p>
       <div class="table-wrap"><table id="yearTable"></table></div>
     </section>
 
@@ -385,9 +387,9 @@
     const defaultCategories = [
       { group: "Income", name: "Base Salary / Take-Home", type: "income", behavior: "income", planned: 3500 },
       { group: "Income", name: "Side Income", type: "income", behavior: "income", planned: 0 },
-      { group: "Savings", name: "HYSA Savings", type: "savings", behavior: "savings", planned: 0, goalKey: "hysa" },
+      { group: "Savings", name: "HYSA Savings", type: "savings", behavior: "savings", planned: 500, goalKey: "hysa" },
       { group: "Savings", name: "Roth IRA", type: "savings", behavior: "savings", planned: 0, goalKey: "roth" },
-      { group: "Savings", name: "Investments", type: "savings", behavior: "savings", planned: 500, goalKey: "emergency" },
+      { group: "Savings", name: "Investments", type: "savings", behavior: "savings", planned: 210, goalKey: "emergency" },
       { group: "Savings", name: "Vacation Savings", type: "savings", behavior: "savings", planned: 300, goalKey: "vacation" },
       { group: "Home", name: "Rent", type: "expense", behavior: "fixed", planned: 1500 },
       { group: "Home", name: "Utilities", type: "expense", behavior: "fixed", planned: 50 },
@@ -403,7 +405,7 @@
       { group: "Health", name: "Medical Out-of-Pocket", type: "expense", behavior: "flexible", planned: 50 },
       { group: "Health", name: "Dental / Vision", type: "expense", behavior: "fixed", planned: 0 },
       { group: "Daily Living", name: "Groceries", type: "expense", behavior: "flexible", planned: 200 },
-      { group: "Daily Living", name: "Dining Out / Date Nights", type: "expense", behavior: "flexible", planned: 200 },
+      { group: "Daily Living", name: "Dining Out / Date Nights", type: "expense", behavior: "flexible", planned: 150 },
       { group: "Entertainment", name: "Fun / Social", type: "expense", behavior: "flexible", planned: 150 },
       { group: "Entertainment", name: "Clothing / Shoes", type: "expense", behavior: "flexible", planned: 150 },
       { group: "Entertainment", name: "Hobbies / Recreation", type: "expense", behavior: "flexible", planned: 100 },
@@ -412,8 +414,8 @@
       { group: "Personal and Family", name: "Gifts / Celebrations", type: "expense", behavior: "flexible", planned: 50 },
       { group: "Giving", name: "Charitable Contributions", type: "expense", behavior: "flexible", planned: 0 },
       { group: "Other", name: "Debt Payments", type: "expense", behavior: "fixed", planned: 0 },
-      { group: "Other", name: "Miscellaneous", type: "expense", behavior: "flexible", planned: 75 },
-      { group: "Other", name: "Irregular Expenses", type: "expense", behavior: "flexible", planned: 200 }
+      { group: "Other", name: "Miscellaneous", type: "expense", behavior: "flexible", planned: 50 },
+      { group: "Other", name: "Irregular / Annual Expenses", type: "expense", behavior: "flexible", planned: 150 }
     ];
 
     const defaultGoals = {
@@ -433,7 +435,7 @@
         transactions: [],
         futureExpenses: [],
         goals: JSON.parse(JSON.stringify(defaultGoals)),
-        balances: { checking: 2500, hysa: 0 },
+        balances: { checking: 2500, hysa: 13500 },
         commissions: [],
         dailyLog: { lastUpdated: "", streak: 0, updatedDates: [] },
         closeouts: {},
@@ -480,7 +482,16 @@
     function actualForCategory(monthIndex, idx) {
       const cat = state.categories[idx];
       const txTotal = transactionActualForCategory(monthIndex, idx);
-      if (cat.type === "expense") return txTotal + num(state.manualActuals[monthIndex]?.[idx] || 0);
+
+      // Fixed expenses are assumed to happen every month automatically.
+      // Manual add-ons and transactions are added on top only if needed.
+      if (cat.type === "expense") {
+        const manual = num(state.manualActuals[monthIndex]?.[idx] || 0);
+        if (cat.behavior === "fixed") return categoryPlanned(cat) + txTotal + manual;
+        return txTotal + manual;
+      }
+
+      // Savings and income default to planned amounts unless manually changed.
       return state.manualActuals[monthIndex]?.[idx] ?? categoryPlanned(cat);
     }
 
@@ -511,7 +522,10 @@
       });
       const futureAllocation = futureMonthlyAllocation(monthIndex);
       plannedExpenses += futureAllocation;
-      return { plannedIncome, actualIncome, plannedSavings, actualSavings, plannedExpenses, actualExpenses, fixedExpenses, flexibleExpenses, flexiblePlanned, futureAllocation, plannedRemaining: plannedIncome - plannedSavings - plannedExpenses, actualRemaining: actualIncome - actualSavings - actualExpenses };
+      const plannedRemaining = plannedIncome - plannedSavings - plannedExpenses;
+      const actualRemaining = actualIncome - actualSavings - actualExpenses;
+      const rothOverflow = Math.max(0, actualRemaining);
+      return { plannedIncome, actualIncome, plannedSavings, actualSavings, plannedExpenses, actualExpenses, fixedExpenses, flexibleExpenses, flexiblePlanned, futureAllocation, rothOverflow, plannedRemaining, actualRemaining };
     }
 
     function yearTotals() { return months.reduce((acc, _, m) => { const t = totalsForMonth(m); Object.keys(t).forEach(k => acc[k] = (acc[k] || 0) + t[k]); return acc; }, {}); }
@@ -529,7 +543,7 @@
 
     function renderSummary() {
       const t = totalsForMonth(selectedMonth); const y = yearTotals(); const weekLeft = weeklyFlexibleBudget() - thisWeekSpent();
-      const cards = [["This Month Income", money(t.actualIncome), `Planned: ${money(t.plannedIncome)}`], ["This Month Expenses", money(t.actualExpenses), `Planned: ${money(t.plannedExpenses)} incl. ${money(t.futureAllocation)} future set-aside`], ["This Week Flexible Left", money(weekLeft), `Weekly budget: ${money(weeklyFlexibleBudget())}`], ["Year Remaining", money(y.actualRemaining), `Across ${selectedYear}`]];
+      const cards = [["This Month Income", money(t.actualIncome), `Planned: ${money(t.plannedIncome)}`], ["This Month Expenses", money(t.actualExpenses), `Planned: ${money(t.plannedExpenses)} incl. ${money(t.futureAllocation)} future set-aside`], ["This Week Flexible Left", money(weekLeft), `Weekly budget: ${money(weeklyFlexibleBudget())}`], ["Roth / Extra Investing", money(t.rothOverflow), "Monthly leftover after spending and savings"]];
       document.getElementById("summaryCards").innerHTML = cards.map(c => `<div class="card"><div class="metric-title">${c[0]}</div><div class="metric-value">${c[1]}</div><div class="metric-note">${c[2]}</div></div>`).join("");
     }
 
@@ -698,7 +712,7 @@
 
     function renderYearTable() {
       let html = `<thead><tr><th>Metric</th>${months.map(m=>`<th>${m}</th>`).join("")}<th>Total</th></tr></thead><tbody>`;
-      [["Actual Income","actualIncome"],["Actual Savings","actualSavings"],["Actual Expenses","actualExpenses"],["Flexible Expenses","flexibleExpenses"],["Future Set-Aside","futureAllocation"],["Actual Remaining","actualRemaining"],["Planned Remaining","plannedRemaining"]].forEach(([label,key])=>{ let total=0; html += `<tr><td>${label}</td>`; months.forEach((_,m)=>{ const v=totalsForMonth(m)[key]; total += v; const cls = key.includes("Remaining") ? (v>=0?"good":"bad") : "neutral"; html += `<td><span class="status ${cls}">${money(v)}</span></td>`; }); html += `<td><strong>${money(total)}</strong></td></tr>`; });
+      [["Actual Income","actualIncome"],["Actual Savings","actualSavings"],["Actual Expenses","actualExpenses"],["Flexible Expenses","flexibleExpenses"],["Future Set-Aside","futureAllocation"],["Roth / Extra Investing","rothOverflow"],["Actual Remaining","actualRemaining"],["Planned Remaining","plannedRemaining"]].forEach(([label,key])=>{ let total=0; html += `<tr><td>${label}</td>`; months.forEach((_,m)=>{ const v=totalsForMonth(m)[key]; total += v; const cls = key.includes("Remaining") ? (v>=0?"good":"bad") : "neutral"; html += `<td><span class="status ${cls}">${money(v)}</span></td>`; }); html += `<td><strong>${money(total)}</strong></td></tr>`; });
       html += `</tbody>`; document.getElementById("yearTable").innerHTML = html;
     }
 
