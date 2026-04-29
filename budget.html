@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Year-Over-Year Personal Budget Tool</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --card: #ffffff;
+      --ink: #152235;
+      --muted: #667085;
+      --line: #d9e2ef;
+      --blue: #0f5f7a;
+      --blue-soft: #e7f4f8;
+      --green: #15803d;
+      --green-soft: #dcfce7;
+      --red: #b91c1c;
+      --red-soft: #fee2e2;
+      --amber: #b45309;
+      --amber-soft: #fef3c7;
+      --shadow: 0 18px 45px rgba(15, 35, 55, 0.08);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(135deg, #eef6fb 0%, #f8fafc 45%, #eef2ff 100%);
+      color: var(--ink);
+    }
+
+    header {
+      padding: 26px 18px 16px;
+      max-width: 1320px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(1.7rem, 4vw, 3rem);
+      letter-spacing: -0.045em;
+      line-height: 1.05;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      max-width: 920px;
+      font-size: 1rem;
+      line-height: 1.5;
+      margin: 0;
+    }
+
+    main {
+      max-width: 1320px;
+      margin: 0 auto 80px;
+      padding: 0 18px 32px;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 18px 0;
+      align-items: center;
+    }
+
+    .pill, button, select, input {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: white;
+      color: var(--ink);
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+      padding: 10px 14px;
+      font-weight: 700;
+      transition: 0.15s ease;
+    }
+
+    button:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(15, 35, 55, 0.08); }
+    button.primary { background: var(--blue); color: white; border-color: var(--blue); }
+    button.danger { background: var(--red-soft); color: var(--red); border-color: #fecaca; }
+
+    select, input {
+      padding: 9px 12px;
+      min-height: 40px;
+      outline: none;
+    }
+
+    input[type="number"] { width: 116px; }
+    .wide-input { width: 190px !important; }
+
+    .grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .summary-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      margin-bottom: 16px;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.9);
+      border: 1px solid rgba(217, 226, 239, 0.9);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+      backdrop-filter: blur(10px);
+    }
+
+    .metric-title {
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 8px;
+    }
+
+    .metric-value {
+      font-size: clamp(1.35rem, 3vw, 2rem);
+      font-weight: 900;
+      letter-spacing: -0.04em;
+    }
+
+    .metric-note {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 12px 0 16px;
+    }
+
+    .tab {
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: white;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .tab.active {
+      color: white;
+      background: var(--blue);
+      border-color: var(--blue);
+    }
+
+    .section { display: none; }
+    .section.active { display: block; }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin: 0 0 12px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 1.25rem;
+      letter-spacing: -0.025em;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: white;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 980px;
+    }
+
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid var(--line);
+      text-align: right;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+
+    th:first-child, td:first-child {
+      text-align: left;
+      position: sticky;
+      left: 0;
+      background: white;
+      z-index: 1;
+    }
+
+    th {
+      background: #f8fafc;
+      color: #475467;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    th:first-child { background: #f8fafc; z-index: 2; }
+
+    .category-row td {
+      background: var(--blue-soft);
+      color: var(--blue);
+      font-weight: 900;
+      text-align: left;
+    }
+
+    .category-row td:first-child { background: var(--blue-soft); }
+
+    .money-input {
+      width: 96px;
+      border-radius: 10px;
+      text-align: right;
+      padding: 8px;
+      min-height: 36px;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      padding: 6px 9px;
+      font-weight: 900;
+      font-size: 0.82rem;
+      min-width: 82px;
+    }
+
+    .status.good { color: var(--green); background: var(--green-soft); }
+    .status.bad { color: var(--red); background: var(--red-soft); }
+    .status.neutral { color: var(--muted); background: #f2f4f7; }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 16px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      align-items: end;
+    }
+
+    label {
+      display: block;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .input-block input, .input-block select {
+      width: 100%;
+      border-radius: 12px;
+    }
+
+    .progress-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .progress-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 7px;
+    }
+
+    .progress-name { font-weight: 900; }
+    .progress-numbers { color: var(--muted); font-size: 0.9rem; }
+
+    .bar {
+      height: 13px;
+      border-radius: 999px;
+      background: #e5e7eb;
+      overflow: hidden;
+    }
+
+    .bar > div {
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #0f5f7a, #15803d);
+      width: 0%;
+      transition: width 0.25s ease;
+    }
+
+    .meter-wrap {
+      display: grid;
+      gap: 12px;
+    }
+
+    .meter {
+      height: 22px;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #fee2e2 0%, #fef3c7 45%, #dcfce7 75%);
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--line);
+    }
+
+    .needle {
+      position: absolute;
+      top: -4px;
+      bottom: -4px;
+      width: 5px;
+      background: #111827;
+      border-radius: 999px;
+      left: 0%;
+      transition: left 0.25s ease;
+    }
+
+    .small-note {
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.45;
+    }
+
+    .commission-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .commission-item {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+      background: #fbfdff;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+    }
+
+    .commission-item strong { display: block; margin-bottom: 3px; }
+    .commission-meta { color: var(--muted); font-size: 0.9rem; line-height: 1.5; }
+
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .mini-card {
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .mini-card b { display: block; font-size: 1.05rem; margin-top: 4px; }
+
+    .footer-note {
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: 0.88rem;
+      text-align: center;
+    }
+
+    @media (max-width: 900px) {
+      .summary-grid, .two-col, .form-grid, .mini-grid { grid-template-columns: 1fr; }
+      input[type="number"] { width: 100%; }
+      .top-actions > * { width: 100%; }
+      .tab { flex: 1; text-align: center; }
+      .commission-item { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Personal Budget Dashboard</h1>
+    <p class="subtitle">Track planned vs actual spending, commission checks, savings goals, and financial stability across the full year. Your data saves automatically in this browser using localStorage.</p>
+    <div class="top-actions">
+      <select id="yearSelect" aria-label="Budget year"></select>
+      <button class="primary" id="saveBtn">Save Now</button>
+      <button id="exportBtn">Export JSON</button>
+      <button id="importBtn">Import JSON</button>
+      <input type="file" id="importFile" accept="application/json" style="display:none" />
+      <button class="danger" id="resetBtn">Reset This Year</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="grid summary-grid" id="summaryCards"></section>
+
+    <div class="tabs">
+      <div class="tab active" data-tab="dashboard">Monthly Dashboard</div>
+      <div class="tab" data-tab="commissions">Commission Tracker</div>
+      <div class="tab" data-tab="goals">Savings Goals</div>
+      <div class="tab" data-tab="yoy">Year View</div>
+      <div class="tab" data-tab="settings">Settings</div>
+    </div>
+
+    <section id="dashboard" class="section active card">
+      <div class="section-title">
+        <h2>Monthly Budget Dashboard</h2>
+        <div>
+          <label for="monthSelect">Month</label>
+          <select id="monthSelect"></select>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table id="monthlyTable"></table>
+      </div>
+    </section>
+
+    <section id="commissions" class="section">
+      <div class="two-col">
+        <div class="card">
+          <div class="section-title"><h2>Add Commission Check</h2></div>
+          <div class="form-grid">
+            <div class="input-block">
+              <label>Date Received</label>
+              <input type="date" id="commissionDate" />
+            </div>
+            <div class="input-block">
+              <label>Gross Commission</label>
+              <input type="number" id="grossCommission" min="0" step="50" placeholder="1800" />
+            </div>
+            <div class="input-block">
+              <label>Checking Balance</label>
+              <input type="number" id="commissionChecking" min="0" step="50" />
+            </div>
+            <div class="input-block">
+              <label>HYSA Balance</label>
+              <input type="number" id="commissionHysa" min="0" step="50" />
+            </div>
+          </div>
+          <div class="mini-grid" id="commissionPreview"></div>
+          <div class="top-actions">
+            <button class="primary" id="addCommissionBtn">Add Commission</button>
+          </div>
+          <p class="small-note">Net commission assumes 25% tax withholding. The split is 60% long-term savings, 20% cash buffer, and 20% lifestyle. Cash buffer refills checking first, then HYSA, then anything left becomes excess.</p>
+        </div>
+
+        <div class="card">
+          <div class="section-title"><h2>Commission History</h2></div>
+          <div class="commission-list" id="commissionHistory"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="goals" class="section">
+      <div class="two-col">
+        <div class="card">
+          <div class="section-title"><h2>Savings Goal Tracker</h2></div>
+          <div class="progress-list" id="goalTracker"></div>
+        </div>
+
+        <div class="card">
+          <div class="section-title"><h2>Safety & Stability Meter</h2></div>
+          <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
+            <div class="input-block">
+              <label>Checking Balance</label>
+              <input type="number" id="checkingBalance" min="0" step="50" />
+            </div>
+            <div class="input-block">
+              <label>HYSA Balance</label>
+              <input type="number" id="hysaBalance" min="0" step="50" />
+            </div>
+          </div>
+          <div class="meter-wrap" style="margin-top:16px;">
+            <div class="meter"><div class="needle" id="stabilityNeedle"></div></div>
+            <div class="metric-value" id="monthsCovered">0.0 months</div>
+            <div class="metric-note" id="stabilityStatus">Enter balances to see your safety status.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="yoy" class="section card">
+      <div class="section-title"><h2>January through December View</h2></div>
+      <div class="table-wrap">
+        <table id="yearTable"></table>
+      </div>
+    </section>
+
+    <section id="settings" class="section card">
+      <div class="section-title"><h2>Income, Targets, and Categories</h2></div>
+      <div class="form-grid">
+        <div class="input-block">
+          <label>Monthly Base Salary / Take-Home</label>
+          <input type="number" id="monthlyIncome" min="0" step="50" />
+        </div>
+        <div class="input-block">
+          <label>Checking Target</label>
+          <input type="number" id="checkingTarget" min="0" step="50" />
+        </div>
+        <div class="input-block">
+          <label>HYSA Target</label>
+          <input type="number" id="hysaTarget" min="0" step="50" />
+        </div>
+        <div class="input-block">
+          <label>Tax Withholding % on Commission</label>
+          <input type="number" id="commissionTax" min="0" max="60" step="1" />
+        </div>
+      </div>
+
+      <div class="table-wrap" style="margin-top:16px;">
+        <table id="settingsTable"></table>
+      </div>
+      <p class="small-note">Planned amounts here update the monthly dashboard and year view. Categories are based on your current structure: home, transportation, health, daily living, entertainment, personal/family, giving, other, and savings.</p>
+    </section>
+
+    <p class="footer-note">Private by default: this runs fully inside your browser. Use export/import if you want a backup.</p>
+  </main>
+
+  <script>
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const fullMonths = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+    const defaultCategories = [
+      { group: "Income", name: "Base Salary / Take-Home", type: "income", planned: 3500 },
+      { group: "Income", name: "Side Income", type: "income", planned: 0 },
+      { group: "Savings", name: "HYSA Savings", type: "savings", planned: 500, goalKey: "hysa" },
+      { group: "Savings", name: "Roth IRA", type: "savings", planned: 0, goalKey: "roth" },
+      { group: "Savings", name: "Emergency Fund", type: "savings", planned: 0, goalKey: "emergency" },
+      { group: "Savings", name: "Vacation Savings", type: "savings", planned: 300, goalKey: "vacation" },
+      { group: "Home", name: "Rent", type: "expense", planned: 1500 },
+      { group: "Home", name: "Utilities", type: "expense", planned: 50 },
+      { group: "Home", name: "Streaming Services", type: "expense", planned: 50 },
+      { group: "Home", name: "Renters Insurance", type: "expense", planned: 0 },
+      { group: "Transportation", name: "Public Transportation / Transit", type: "expense", planned: 0 },
+      { group: "Transportation", name: "Uber / Rideshare", type: "expense", planned: 100 },
+      { group: "Transportation", name: "Car Payment", type: "expense", planned: 0 },
+      { group: "Transportation", name: "Fuel", type: "expense", planned: 0 },
+      { group: "Transportation", name: "Auto Insurance", type: "expense", planned: 0 },
+      { group: "Transportation", name: "Auto Maintenance", type: "expense", planned: 0 },
+      { group: "Health", name: "Health Insurance", type: "expense", planned: 0 },
+      { group: "Health", name: "Medical Out-of-Pocket", type: "expense", planned: 50 },
+      { group: "Health", name: "Dental / Vision", type: "expense", planned: 0 },
+      { group: "Daily Living", name: "Groceries", type: "expense", planned: 200 },
+      { group: "Daily Living", name: "Dining Out / Date Nights", type: "expense", planned: 200 },
+      { group: "Entertainment", name: "Fun / Social", type: "expense", planned: 150 },
+      { group: "Entertainment", name: "Clothing / Shoes", type: "expense", planned: 150 },
+      { group: "Entertainment", name: "Hobbies / Recreation", type: "expense", planned: 100 },
+      { group: "Personal and Family", name: "Personal Care", type: "expense", planned: 75 },
+      { group: "Personal and Family", name: "Haircut / Products", type: "expense", planned: 50 },
+      { group: "Personal and Family", name: "Gifts / Celebrations", type: "expense", planned: 50 },
+      { group: "Giving", name: "Charitable Contributions", type: "expense", planned: 0 },
+      { group: "Other", name: "Debt Payments", type: "expense", planned: 0 },
+      { group: "Other", name: "Miscellaneous", type: "expense", planned: 75 },
+      { group: "Other", name: "Irregular / Annual Expenses", type: "expense", planned: 200 }
+    ];
+
+    const defaultGoals = {
+      emergency: { name: "Emergency Fund", target: 11500, current: 0 },
+      roth: { name: "Roth IRA", target: 7500, current: 0 },
+      hysa: { name: "HYSA", target: 11500, current: 0 },
+      vacation: { name: "Vacation Fund", target: 1800, current: 0 }
+    };
+
+    const currentYear = new Date().getFullYear();
+    const stateKeyPrefix = "personalBudgetTool_v1_";
+    let selectedYear = currentYear;
+    let selectedMonth = new Date().getMonth();
+    let state = loadState(selectedYear);
+
+    function freshState(year) {
+      const actuals = {};
+      months.forEach((_, m) => actuals[m] = {});
+      return {
+        year,
+        settings: { monthlyIncome: 3500, checkingTarget: 1500, hysaTarget: 11500, commissionTax: 25 },
+        categories: JSON.parse(JSON.stringify(defaultCategories)),
+        actuals,
+        goals: JSON.parse(JSON.stringify(defaultGoals)),
+        balances: { checking: 1500, hysa: 0 },
+        commissions: []
+      };
+    }
+
+    function loadState(year) {
+      const saved = localStorage.getItem(stateKeyPrefix + year);
+      if (!saved) return freshState(year);
+      try {
+        const parsed = JSON.parse(saved);
+        return mergeDefaults(parsed, freshState(year));
+      } catch {
+        return freshState(year);
+      }
+    }
+
+    function mergeDefaults(saved, fresh) {
+      return {
+        ...fresh,
+        ...saved,
+        settings: { ...fresh.settings, ...(saved.settings || {}) },
+        goals: { ...fresh.goals, ...(saved.goals || {}) },
+        balances: { ...fresh.balances, ...(saved.balances || {}) },
+        categories: saved.categories || fresh.categories,
+        actuals: saved.actuals || fresh.actuals,
+        commissions: saved.commissions || []
+      };
+    }
+
+    function saveState() {
+      localStorage.setItem(stateKeyPrefix + selectedYear, JSON.stringify(state));
+      renderAll();
+    }
+
+    function money(n) {
+      return (Number(n) || 0).toLocaleString(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+    }
+
+    function num(v) { return Number(v) || 0; }
+
+    function totalsForMonth(monthIndex) {
+      let plannedIncome = 0, actualIncome = 0, plannedSavings = 0, actualSavings = 0, plannedExpenses = 0, actualExpenses = 0;
+      state.categories.forEach((cat, idx) => {
+        const planned = cat.name === "Base Salary / Take-Home" ? num(state.settings.monthlyIncome) : num(cat.planned);
+        const actual = state.actuals[monthIndex]?.[idx] ?? planned;
+        if (cat.type === "income") { plannedIncome += planned; actualIncome += num(actual); }
+        if (cat.type === "savings") { plannedSavings += planned; actualSavings += num(actual); }
+        if (cat.type === "expense") { plannedExpenses += planned; actualExpenses += num(actual); }
+      });
+      return {
+        plannedIncome, actualIncome, plannedSavings, actualSavings, plannedExpenses, actualExpenses,
+        plannedRemaining: plannedIncome - plannedSavings - plannedExpenses,
+        actualRemaining: actualIncome - actualSavings - actualExpenses
+      };
+    }
+
+    function yearTotals() {
+      return months.reduce((acc, _, m) => {
+        const t = totalsForMonth(m);
+        Object.keys(t).forEach(k => acc[k] = (acc[k] || 0) + t[k]);
+        return acc;
+      }, {});
+    }
+
+    function renderYearOptions() {
+      const select = document.getElementById("yearSelect");
+      select.innerHTML = "";
+      for (let y = currentYear - 1; y <= currentYear + 5; y++) {
+        const opt = document.createElement("option");
+        opt.value = y;
+        opt.textContent = y;
+        if (y === selectedYear) opt.selected = true;
+        select.appendChild(opt);
+      }
+    }
+
+    function renderMonthOptions() {
+      const select = document.getElementById("monthSelect");
+      select.innerHTML = months.map((m, i) => `<option value="${i}" ${i === selectedMonth ? "selected" : ""}>${fullMonths[i]}</option>`).join("");
+    }
+
+    function renderSummary() {
+      const t = totalsForMonth(selectedMonth);
+      const y = yearTotals();
+      const cards = [
+        ["This Month Income", money(t.actualIncome), `Planned: ${money(t.plannedIncome)}`],
+        ["This Month Expenses", money(t.actualExpenses), `Planned: ${money(t.plannedExpenses)}`],
+        ["This Month Savings", money(t.actualSavings), `Planned: ${money(t.plannedSavings)}`],
+        ["Year Remaining", money(y.actualRemaining), `Across ${selectedYear}`]
+      ];
+      document.getElementById("summaryCards").innerHTML = cards.map(c => `
+        <div class="card">
+          <div class="metric-title">${c[0]}</div>
+          <div class="metric-value">${c[1]}</div>
+          <div class="metric-note">${c[2]}</div>
+        </div>
+      `).join("");
+    }
+
+    function renderMonthlyTable() {
+      let html = `<thead><tr><th>Category</th><th>Type</th><th>Planned</th><th>Actual</th><th>Difference</th><th>Status</th></tr></thead><tbody>`;
+      let currentGroup = "";
+      state.categories.forEach((cat, idx) => {
+        if (cat.group !== currentGroup) {
+          currentGroup = cat.group;
+          html += `<tr class="category-row"><td colspan="6">${currentGroup}</td></tr>`;
+        }
+        const planned = cat.name === "Base Salary / Take-Home" ? num(state.settings.monthlyIncome) : num(cat.planned);
+        const actual = state.actuals[selectedMonth]?.[idx] ?? planned;
+        const diff = cat.type === "income" ? num(actual) - planned : planned - num(actual);
+        const cls = diff > 0 ? "good" : diff < 0 ? "bad" : "neutral";
+        const label = diff > 0 ? "Surplus" : diff < 0 ? "Over" : "On Track";
+        html += `<tr>
+          <td>${cat.name}</td>
+          <td>${cat.type}</td>
+          <td>${money(planned)}</td>
+          <td><input class="money-input actual-input" type="number" data-idx="${idx}" value="${actual}" step="10" /></td>
+          <td>${money(Math.abs(diff))}</td>
+          <td><span class="status ${cls}">${label}</span></td>
+        </tr>`;
+      });
+      const t = totalsForMonth(selectedMonth);
+      html += `<tr class="category-row"><td colspan="6">Monthly Totals</td></tr>
+        <tr><td>Income</td><td></td><td>${money(t.plannedIncome)}</td><td>${money(t.actualIncome)}</td><td colspan="2"></td></tr>
+        <tr><td>Savings</td><td></td><td>${money(t.plannedSavings)}</td><td>${money(t.actualSavings)}</td><td colspan="2"></td></tr>
+        <tr><td>Expenses</td><td></td><td>${money(t.plannedExpenses)}</td><td>${money(t.actualExpenses)}</td><td colspan="2"></td></tr>
+        <tr><td><strong>Remaining</strong></td><td></td><td><strong>${money(t.plannedRemaining)}</strong></td><td><strong>${money(t.actualRemaining)}</strong></td><td colspan="2"></td></tr>`;
+      html += `</tbody>`;
+      document.getElementById("monthlyTable").innerHTML = html;
+
+      document.querySelectorAll(".actual-input").forEach(input => {
+        input.addEventListener("input", e => {
+          const idx = e.target.dataset.idx;
+          state.actuals[selectedMonth][idx] = num(e.target.value);
+          updateGoalContributionsFromActuals();
+          saveState();
+        });
+      });
+    }
+
+    function updateGoalContributionsFromActuals() {
+      const baseGoals = JSON.parse(JSON.stringify(defaultGoals));
+      Object.keys(state.goals).forEach(k => {
+        if (!baseGoals[k]) baseGoals[k] = state.goals[k];
+        baseGoals[k].target = num(state.goals[k].target);
+        baseGoals[k].current = 0;
+      });
+      state.categories.forEach((cat, idx) => {
+        if (!cat.goalKey) return;
+        months.forEach((_, m) => {
+          baseGoals[cat.goalKey].current += num(state.actuals[m]?.[idx] ?? 0);
+        });
+      });
+      state.commissions.forEach(c => {
+        baseGoals.hysa.current += num(c.toHysa);
+        baseGoals.emergency.current += num(c.longTerm) * 0.4;
+        baseGoals.roth.current += num(c.longTerm) * 0.6;
+      });
+      Object.keys(baseGoals).forEach(k => state.goals[k].current = baseGoals[k].current);
+    }
+
+    function calculateCommission(gross, checking, hysa) {
+      const taxRate = num(state.settings.commissionTax) / 100;
+      const net = gross * (1 - taxRate);
+      const longTerm = net * 0.6;
+      const cashBuffer = net * 0.2;
+      const lifestyle = net * 0.2;
+      const toChecking = Math.min(Math.max(num(state.settings.checkingTarget) - checking, 0), cashBuffer);
+      const remainingBuffer = cashBuffer - toChecking;
+      const toHysa = Math.min(Math.max(num(state.settings.hysaTarget) - hysa, 0), remainingBuffer);
+      const excess = Math.max(remainingBuffer - toHysa, 0);
+      return { net, longTerm, cashBuffer, lifestyle, toChecking, toHysa, excess };
+    }
+
+    function renderCommissionPreview() {
+      const gross = num(document.getElementById("grossCommission").value);
+      const checking = num(document.getElementById("commissionChecking").value);
+      const hysa = num(document.getElementById("commissionHysa").value);
+      const c = calculateCommission(gross, checking, hysa);
+      const items = [
+        ["Net", c.net], ["Long-Term", c.longTerm], ["Cash Buffer", c.cashBuffer], ["Lifestyle", c.lifestyle],
+        ["To Checking", c.toChecking], ["To HYSA", c.toHysa], ["Excess Buffer", c.excess]
+      ];
+      document.getElementById("commissionPreview").innerHTML = items.map(i => `<div class="mini-card"><span>${i[0]}</span><b>${money(i[1])}</b></div>`).join("");
+    }
+
+    function renderCommissionHistory() {
+      const el = document.getElementById("commissionHistory");
+      if (!state.commissions.length) {
+        el.innerHTML = `<p class="small-note">No commission checks added yet.</p>`;
+        return;
+      }
+      el.innerHTML = state.commissions.map((c, i) => `
+        <div class="commission-item">
+          <div>
+            <strong>${c.date || "No date"} · Gross ${money(c.gross)} · Net ${money(c.net)}</strong>
+            <div class="commission-meta">Long-term: ${money(c.longTerm)} · Cash buffer: ${money(c.cashBuffer)} · Lifestyle: ${money(c.lifestyle)}<br>Refill logic: ${money(c.toChecking)} to checking, ${money(c.toHysa)} to HYSA, ${money(c.excess)} excess</div>
+          </div>
+          <button class="danger delete-commission" data-index="${i}">Delete</button>
+        </div>
+      `).join("");
+      document.querySelectorAll(".delete-commission").forEach(btn => {
+        btn.addEventListener("click", e => {
+          state.commissions.splice(Number(e.target.dataset.index), 1);
+          updateGoalContributionsFromActuals();
+          saveState();
+        });
+      });
+    }
+
+    function renderGoals() {
+      const goals = Object.entries(state.goals);
+      document.getElementById("goalTracker").innerHTML = goals.map(([key, g]) => {
+        const pct = Math.min(100, (num(g.current) / Math.max(num(g.target), 1)) * 100);
+        return `<div>
+          <div class="progress-head">
+            <div class="progress-name">${g.name}</div>
+            <div class="progress-numbers">${money(g.current)} / ${money(g.target)} · ${pct.toFixed(0)}%</div>
+          </div>
+          <div class="bar"><div style="width:${pct}%"></div></div>
+        </div>`;
+      }).join("");
+
+      document.getElementById("checkingBalance").value = state.balances.checking;
+      document.getElementById("hysaBalance").value = state.balances.hysa;
+      const avgCore = state.categories.filter(c => c.type === "expense").reduce((sum, c) => sum + num(c.planned), 0);
+      const liquid = num(state.balances.checking) + num(state.balances.hysa);
+      const covered = liquid / Math.max(avgCore, 1);
+      document.getElementById("monthsCovered").textContent = `${covered.toFixed(1)} months`;
+      document.getElementById("stabilityNeedle").style.left = `${Math.min(100, covered / 6 * 100)}%`;
+      const status = covered >= 5 ? "Strong" : covered >= 3 ? "Stable" : covered >= 1 ? "Thin" : "At Risk";
+      document.getElementById("stabilityStatus").textContent = `${status}: ${money(liquid)} liquid savings against roughly ${money(avgCore)} in monthly planned expenses.`;
+    }
+
+    function renderYearTable() {
+      let html = `<thead><tr><th>Metric</th>${months.map(m => `<th>${m}</th>`).join("")}<th>Total</th></tr></thead><tbody>`;
+      const rows = [
+        ["Actual Income", "actualIncome"], ["Actual Savings", "actualSavings"], ["Actual Expenses", "actualExpenses"], ["Actual Remaining", "actualRemaining"],
+        ["Planned Income", "plannedIncome"], ["Planned Savings", "plannedSavings"], ["Planned Expenses", "plannedExpenses"], ["Planned Remaining", "plannedRemaining"]
+      ];
+      rows.forEach(([label, key]) => {
+        let total = 0;
+        html += `<tr><td>${label}</td>`;
+        months.forEach((_, m) => {
+          const v = totalsForMonth(m)[key];
+          total += v;
+          html += `<td>${money(v)}</td>`;
+        });
+        html += `<td><strong>${money(total)}</strong></td></tr>`;
+      });
+      html += `</tbody>`;
+      document.getElementById("yearTable").innerHTML = html;
+    }
+
+    function renderSettings() {
+      document.getElementById("monthlyIncome").value = state.settings.monthlyIncome;
+      document.getElementById("checkingTarget").value = state.settings.checkingTarget;
+      document.getElementById("hysaTarget").value = state.settings.hysaTarget;
+      document.getElementById("commissionTax").value = state.settings.commissionTax;
+      let html = `<thead><tr><th>Category</th><th>Type</th><th>Monthly Planned</th></tr></thead><tbody>`;
+      state.categories.forEach((cat, idx) => {
+        if (cat.name === "Base Salary / Take-Home") return;
+        html += `<tr><td>${cat.group} · ${cat.name}</td><td>${cat.type}</td><td><input class="money-input planned-input" type="number" data-idx="${idx}" value="${cat.planned}" step="10" /></td></tr>`;
+      });
+      html += `</tbody>`;
+      document.getElementById("settingsTable").innerHTML = html;
+      document.querySelectorAll(".planned-input").forEach(input => {
+        input.addEventListener("input", e => {
+          state.categories[e.target.dataset.idx].planned = num(e.target.value);
+          saveState();
+        });
+      });
+    }
+
+    function renderAll() {
+      renderYearOptions();
+      renderMonthOptions();
+      renderSummary();
+      renderMonthlyTable();
+      renderCommissionPreview();
+      renderCommissionHistory();
+      renderGoals();
+      renderYearTable();
+      renderSettings();
+    }
+
+    document.querySelectorAll(".tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+        document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+        tab.classList.add("active");
+        document.getElementById(tab.dataset.tab).classList.add("active");
+      });
+    });
+
+    document.getElementById("yearSelect").addEventListener("change", e => {
+      selectedYear = Number(e.target.value);
+      state = loadState(selectedYear);
+      renderAll();
+    });
+
+    document.getElementById("monthSelect").addEventListener("change", e => {
+      selectedMonth = Number(e.target.value);
+      renderAll();
+    });
+
+    ["monthlyIncome", "checkingTarget", "hysaTarget", "commissionTax"].forEach(id => {
+      document.getElementById(id).addEventListener("input", e => {
+        state.settings[id] = num(e.target.value);
+        saveState();
+      });
+    });
+
+    ["grossCommission", "commissionChecking", "commissionHysa"].forEach(id => {
+      document.getElementById(id).addEventListener("input", renderCommissionPreview);
+    });
+
+    document.getElementById("addCommissionBtn").addEventListener("click", () => {
+      const gross = num(document.getElementById("grossCommission").value);
+      if (gross <= 0) return alert("Enter a gross commission amount first.");
+      const checking = num(document.getElementById("commissionChecking").value);
+      const hysa = num(document.getElementById("commissionHysa").value);
+      const calc = calculateCommission(gross, checking, hysa);
+      state.commissions.push({
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+        date: document.getElementById("commissionDate").value,
+        gross, checkingAtTime: checking, hysaAtTime: hysa, ...calc
+      });
+      state.balances.checking = checking + calc.toChecking;
+      state.balances.hysa = hysa + calc.toHysa;
+      document.getElementById("grossCommission").value = "";
+      updateGoalContributionsFromActuals();
+      saveState();
+    });
+
+    document.getElementById("checkingBalance").addEventListener("input", e => { state.balances.checking = num(e.target.value); saveState(); });
+    document.getElementById("hysaBalance").addEventListener("input", e => { state.balances.hysa = num(e.target.value); saveState(); });
+    document.getElementById("saveBtn").addEventListener("click", saveState);
+
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      if (!confirm(`Reset all ${selectedYear} budget data?`)) return;
+      localStorage.removeItem(stateKeyPrefix + selectedYear);
+      state = freshState(selectedYear);
+      renderAll();
+    });
+
+    document.getElementById("exportBtn").addEventListener("click", () => {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `budget-${selectedYear}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    document.getElementById("importBtn").addEventListener("click", () => document.getElementById("importFile").click());
+    document.getElementById("importFile").addEventListener("change", e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          state = mergeDefaults(JSON.parse(reader.result), freshState(selectedYear));
+          state.year = selectedYear;
+          saveState();
+        } catch {
+          alert("That JSON file could not be imported.");
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    updateGoalContributionsFromActuals();
+    renderAll();
+  </script>
+</body>
+</html>
