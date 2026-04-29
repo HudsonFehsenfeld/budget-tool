@@ -326,7 +326,8 @@
 
     <section id="goals" class="section">
       <div class="two-col">
-        <div class="card"><div class="section-title"><h2>Savings Goal Tracker</h2></div><div class="progress-list" id="goalTracker"></div></div>
+        <div class="card"><div class="section-title"><h2>Savings Goal Tracker</h2></div>
+          <div class="mini-grid" id="rothReadyBox"></div><div class="progress-list" id="goalTracker"></div></div>
         <div class="card">
           <div class="section-title"><h2>Safety & Stability Meter</h2></div>
           <div class="form-grid" style="grid-template-columns:1fr 1fr;">
@@ -360,6 +361,7 @@
         <div class="input-block"><label>HYSA Target</label><input type="number" inputmode="decimal" id="hysaTarget" min="0" step="50" /></div>
         <div class="input-block"><label>Commission Withholding %</label><input type="number" inputmode="decimal" id="commissionTax" min="0" max="60" step="1" /></div>
         <div class="input-block"><label>Extra Tax Reserve %</label><input type="number" inputmode="decimal" id="extraTaxReserve" min="0" max="30" step="1" /></div>
+        <div class="input-block"><label>% of Long-Term → Roth</label><input type="number" inputmode="decimal" id="rothFromCommissionPct" min="0" max="100" step="5" /></div>
         <div class="input-block"><label>Low Buffer Trigger</label><input type="number" inputmode="decimal" id="lowBufferTrigger" min="0" step="25" /></div>
         <div class="input-block"><label>Weekly Score Goal</label><input type="number" inputmode="decimal" id="weeklyScoreGoal" min="0" max="100" step="5" /></div>
         <div class="input-block"><label>Backup Reminder Days</label><input type="number" inputmode="numeric" id="backupReminderDays" min="1" max="30" step="1" /></div>
@@ -385,7 +387,7 @@
       { group: "Income", name: "Side Income", type: "income", behavior: "income", planned: 0 },
       { group: "Savings", name: "HYSA Savings", type: "savings", behavior: "savings", planned: 500, goalKey: "hysa" },
       { group: "Savings", name: "Roth IRA", type: "savings", behavior: "savings", planned: 0, goalKey: "roth" },
-      { group: "Savings", name: "Investments", type: "savings", behavior: "savings", planned: 0, goalKey: "emergency" },
+      { group: "Savings", name: "Emergency Fund", type: "savings", behavior: "savings", planned: 0, goalKey: "emergency" },
       { group: "Savings", name: "Vacation Savings", type: "savings", behavior: "savings", planned: 300, goalKey: "vacation" },
       { group: "Home", name: "Rent", type: "expense", behavior: "fixed", planned: 1500 },
       { group: "Home", name: "Utilities", type: "expense", behavior: "fixed", planned: 50 },
@@ -415,7 +417,7 @@
     ];
 
     const defaultGoals = {
-      emergency: { name: "Investments", target: 11500, current: 0 },
+      emergency: { name: "Emergency Fund", target: 11500, current: 0 },
       roth: { name: "Roth IRA", target: 7500, current: 0 },
       hysa: { name: "HYSA", target: 11500, current: 0 },
       vacation: { name: "Vacation Fund", target: 1800, current: 0 }
@@ -425,7 +427,7 @@
       const manualActuals = {}; months.forEach((_, m) => manualActuals[m] = {});
       return {
         year,
-        settings: { monthlyIncome: 3500, checkingTarget: 1500, hysaTarget: 11500, commissionTax: 25, extraTaxReserve: 5, lowBufferTrigger: 300, weeklyScoreGoal: 85, backupReminderDays: 7 },
+        settings: { monthlyIncome: 3500, checkingTarget: 1500, hysaTarget: 11500, commissionTax: 25, extraTaxReserve: 5, rothFromCommissionPct: 30, lowBufferTrigger: 300, weeklyScoreGoal: 85, backupReminderDays: 7 },
         categories: JSON.parse(JSON.stringify(defaultCategories)),
         manualActuals,
         transactions: [],
@@ -597,19 +599,32 @@
     }
 
     function calculateCommission(gross, checking, hysa) {
-      const taxRate = num(state.settings.commissionTax) / 100, reserveRate = num(state.settings.extraTaxReserve) / 100;
-      const net = gross * (1 - taxRate), taxReserve = gross * reserveRate, distributable = Math.max(0, net - taxReserve);
-      const longTerm = distributable * 0.6, cashBuffer = distributable * 0.2, lifestyle = distributable * 0.2;
+      const taxRate = num(state.settings.commissionTax) / 100;
+      const reserveRate = num(state.settings.extraTaxReserve) / 100;
+      const rothPct = num(state.settings.rothFromCommissionPct) / 100;
+
+      const net = gross * (1 - taxRate);
+      const taxReserve = gross * reserveRate;
+      const distributable = Math.max(0, net - taxReserve);
+
+      const longTerm = distributable * 0.6;
+      const cashBuffer = distributable * 0.2;
+      const lifestyle = distributable * 0.2;
+
+      const rothAlloc = longTerm * rothPct;
+      const investAlloc = longTerm - rothAlloc;
+
       const toChecking = Math.min(Math.max(num(state.settings.checkingTarget) - checking, 0), cashBuffer);
       const remainingBuffer = cashBuffer - toChecking;
       const toHysa = Math.min(Math.max(num(state.settings.hysaTarget) - hysa, 0), remainingBuffer);
       const excess = Math.max(remainingBuffer - toHysa, 0);
-      return { net, taxReserve, distributable, longTerm, cashBuffer, lifestyle, toChecking, toHysa, excess };
+
+      return { net, taxReserve, distributable, longTerm, rothAlloc, investAlloc, cashBuffer, lifestyle, toChecking, toHysa, excess };
     }
 
     function renderCommissionPreview() {
       const c = calculateCommission(num(document.getElementById("grossCommission").value), num(document.getElementById("commissionChecking").value), num(document.getElementById("commissionHysa").value));
-      const items = [["Net After Withholding", c.net], ["Extra Tax Reserve", c.taxReserve], ["Long-Term", c.longTerm], ["Cash Buffer", c.cashBuffer], ["Lifestyle", c.lifestyle], ["To Checking", c.toChecking], ["To HYSA", c.toHysa], ["Excess Buffer", c.excess]];
+      const items = [["Net After Withholding", c.net], ["Extra Tax Reserve", c.taxReserve], ["Roth Allocation", c.rothAlloc], ["Other Investments", c.investAlloc], ["Long-Term Total", c.longTerm], ["Cash Buffer", c.cashBuffer], ["Lifestyle", c.lifestyle], ["To Checking", c.toChecking], ["To HYSA", c.toHysa], ["Excess Buffer", c.excess]];
       document.getElementById("commissionPreview").innerHTML = items.map(i => `<div class="mini-card"><span>${i[0]}</span><b>${money(i[1])}</b></div>`).join("");
     }
 
@@ -622,13 +637,54 @@
     function updateGoalContributions() {
       const base = JSON.parse(JSON.stringify(defaultGoals)); Object.keys(state.goals).forEach(k => { if (!base[k]) base[k] = state.goals[k]; base[k].target = num(state.goals[k].target); base[k].current = 0; });
       state.categories.forEach((cat, idx) => { if (!cat.goalKey) return; months.forEach((_, m) => base[cat.goalKey].current += num(actualForCategory(m, idx))); });
-      state.commissions.forEach(c => { base.hysa.current += num(c.toHysa); base.emergency.current += num(c.longTerm) * 0.4; base.roth.current += num(c.longTerm) * 0.6; });
+      state.commissions.forEach(c => {
+        base.hysa.current += num(c.toHysa);
+        base.roth.current += num(c.rothAlloc);
+        base.emergency.current += num(c.investAlloc);
+      });
       Object.keys(base).forEach(k => state.goals[k].current = base[k].current);
     }
 
     function renderGoals() {
+      // Roth Ready Meter
+      const rothTarget = num(state.goals.roth.target);
+      const rothCurrent = num(state.goals.roth.current);
+      const rothPct = Math.min(100, (rothCurrent / Math.max(rothTarget,1)) * 100);
+      document.getElementById("rothReadyBox").innerHTML = `
+        <div class="mini-card">
+          <span>Roth Ready</span>
+          <b>${money(rothCurrent)} / ${money(rothTarget)}</b>
+          <div class="bar" style="margin-top:6px;"><div style="width:${rothPct}%"></div></div>
+          <div class="small-note">${rothPct.toFixed(0)}% funded toward yearly contribution</div>
+          <div class="button-row" style="margin-top:8px;">
+            <button class="primary" id="executeRothBtn">Execute Roth Contribution</button>
+          </div>
+        </div>
+      `;
       document.getElementById("goalTracker").innerHTML = Object.entries(state.goals).map(([k,g]) => { const pct = Math.min(100, num(g.current)/Math.max(num(g.target),1)*100); return `<div><div class="progress-head"><div class="progress-name">${g.name}</div><div class="progress-numbers">${money(g.current)} / ${money(g.target)} · ${pct.toFixed(0)}%</div></div><div class="bar"><div style="width:${pct}%"></div></div></div>`; }).join("");
-      document.getElementById("checkingBalance").value = state.balances.checking; document.getElementById("hysaBalance").value = state.balances.hysa;
+      document.getElementById("checkingBalance").value = state.balances.checking;
+
+      // Roth execution button
+      const btn = document.getElementById("executeRothBtn");
+      if (btn) {
+        btn.onclick = () => {
+          const amt = num(state.goals.roth.current);
+          if (amt <= 0) return alert("No Roth funds accumulated yet.");
+
+          // log into current month as Roth contribution
+          const rothIdx = state.categories.findIndex(c => c.goalKey === "roth");
+          state.manualActuals[selectedMonth][rothIdx] = (state.manualActuals[selectedMonth][rothIdx] || 0) + amt;
+
+          // deduct from HYSA first (simplified assumption)
+          state.balances.hysa = Math.max(0, num(state.balances.hysa) - amt);
+
+          // reset tracker
+          state.goals.roth.current = 0;
+
+          alert(`Roth contribution of ${money(amt)} logged.`);
+          saveState();
+        };
+      } document.getElementById("hysaBalance").value = state.balances.hysa;
       const avgCore = state.categories.filter(c => c.type === "expense").reduce((s,c)=>s+categoryPlanned(c),0); const liquid = num(state.balances.checking)+num(state.balances.hysa); const covered = liquid / Math.max(avgCore,1);
       document.getElementById("monthsCovered").textContent = `${covered.toFixed(1)} months`; document.getElementById("stabilityNeedle").style.left = `${Math.min(100, covered/6*100)}%`;
       const status = covered >= 5 ? "Strong" : covered >= 3 ? "Stable" : covered >= 1 ? "Thin" : "At Risk"; document.getElementById("stabilityStatus").textContent = `${status}: ${money(liquid)} liquid savings against roughly ${money(avgCore)} in monthly planned expenses.`;
@@ -647,7 +703,7 @@
     }
 
     function renderSettings() {
-      ["monthlyIncome","checkingTarget","hysaTarget","commissionTax","extraTaxReserve","lowBufferTrigger","weeklyScoreGoal","backupReminderDays"].forEach(id => document.getElementById(id).value = state.settings[id]);
+      ["monthlyIncome","checkingTarget","hysaTarget","commissionTax","extraTaxReserve","rothFromCommissionPct","lowBufferTrigger","weeklyScoreGoal","backupReminderDays"].forEach(id => document.getElementById(id).value = state.settings[id]);
       let html = `<thead><tr><th>Category</th><th>Type</th><th>Fixed/Flexible</th><th>Monthly Planned</th></tr></thead><tbody>`;
       state.categories.forEach((cat, idx) => { if (cat.name === "Base Salary / Take-Home") return; html += `<tr><td>${cat.group} · ${cat.name}</td><td>${cat.type}</td><td><select class="behavior-input" data-idx="${idx}"><option ${cat.behavior==="fixed"?"selected":""}>fixed</option><option ${cat.behavior==="flexible"?"selected":""}>flexible</option><option ${cat.behavior==="savings"?"selected":""}>savings</option><option ${cat.behavior==="income"?"selected":""}>income</option></select></td><td><input class="money-input planned-input" type="number" inputmode="decimal" data-idx="${idx}" value="${cat.planned}" step="10" /></td></tr>`; });
       html += `</tbody>`; document.getElementById("settingsTable").innerHTML = html;
@@ -660,7 +716,7 @@
     document.querySelectorAll(".tab").forEach(tab => tab.addEventListener("click", () => { document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active")); document.querySelectorAll(".section").forEach(s=>s.classList.remove("active")); tab.classList.add("active"); document.getElementById(tab.dataset.tab).classList.add("active"); }));
     document.getElementById("yearSelect").addEventListener("change", e => { selectedYear = Number(e.target.value); state = loadState(selectedYear); updateGoalContributions(); renderAll(); });
     document.getElementById("monthSelect").addEventListener("change", e => { selectedMonth = Number(e.target.value); renderAll(); });
-    ["monthlyIncome","checkingTarget","hysaTarget","commissionTax","extraTaxReserve","lowBufferTrigger","weeklyScoreGoal","backupReminderDays"].forEach(id => document.getElementById(id).addEventListener("input", e => { state.settings[id] = num(e.target.value); saveState(); }));
+    ["monthlyIncome","checkingTarget","hysaTarget","commissionTax","extraTaxReserve","rothFromCommissionPct","lowBufferTrigger","weeklyScoreGoal","backupReminderDays"].forEach(id => document.getElementById(id).addEventListener("input", e => { state.settings[id] = num(e.target.value); saveState(); }));
     ["grossCommission","commissionChecking","commissionHysa"].forEach(id => document.getElementById(id).addEventListener("input", renderCommissionPreview));
     ["checkingBalance","hysaBalance"].forEach(id => document.getElementById(id).addEventListener("input", e => { state.balances[id === "checkingBalance" ? "checking" : "hysa"] = num(e.target.value); saveState(); }));
     document.querySelectorAll(".quick-preset").forEach(btn => btn.addEventListener("click", () => { const i = document.getElementById("quickAmount"); if (btn.dataset.clear) { i.value = ""; i.focus(); return; } i.value = num(i.value) + num(btn.dataset.amount); i.focus(); }));
