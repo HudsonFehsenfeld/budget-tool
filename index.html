@@ -738,7 +738,26 @@
     document.getElementById("addTxBtn").addEventListener("click", () => { addTransaction(document.getElementById("txDate").value, document.getElementById("txCategory").value, document.getElementById("txAmount").value, document.getElementById("txMerchant").value, document.getElementById("txNote").value); ["txAmount","txMerchant","txNote"].forEach(id=>document.getElementById(id).value=""); });
     document.getElementById("addFutureBtn").addEventListener("click", () => { const name = document.getElementById("futureName").value || "Future Expense"; const date = document.getElementById("futureDate").value; const amount = num(document.getElementById("futureAmount").value); if (!date || amount <= 0) return alert("Enter a due date and amount."); state.futureExpenses.push({ id: uid(), name, date, amount, priority: document.getElementById("futurePriority").value }); ["futureName","futureDate","futureAmount"].forEach(id=>document.getElementById(id).value=""); saveState(); });
     document.getElementById("addCommissionBtn").addEventListener("click", () => { const gross = num(document.getElementById("grossCommission").value); if (gross <= 0) return alert("Enter a gross commission amount first."); const checking = num(document.getElementById("commissionChecking").value), hysa = num(document.getElementById("commissionHysa").value), calc = calculateCommission(gross, checking, hysa); state.commissions.push({ id: uid(), date: document.getElementById("commissionDate").value, gross, checkingAtTime: checking, hysaAtTime: hysa, ...calc }); state.balances.checking = checking + calc.toChecking; state.balances.hysa = hysa + calc.toHysa; document.getElementById("grossCommission").value = ""; markDailyDone(); updateGoalContributions(); saveState(); });
-    document.getElementById("saveBtn").addEventListener("click", () => saveState());
+    function syncSettingsFromInputs() {
+      ["monthlyIncome","checkingTarget","hysaTarget","commissionTax","extraTaxReserve","rothFromCommissionPct","lowBufferTrigger","weeklyScoreGoal","backupReminderDays"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) state.settings[id] = num(el.value);
+      });
+
+      document.querySelectorAll(".planned-input").forEach(input => {
+        state.categories[input.dataset.idx].planned = num(input.value);
+      });
+
+      document.querySelectorAll(".behavior-input").forEach(input => {
+        state.categories[input.dataset.idx].behavior = input.value;
+      });
+    }
+
+    document.getElementById("saveBtn").addEventListener("click", () => {
+      syncSettingsFromInputs();
+      saveState();
+      alert("Saved.");
+    });
     document.getElementById("resetBtn").addEventListener("click", () => { if (!confirm("Export a backup first if you care about this data. Reset this year now?")) return; localStorage.removeItem(stateKeyPrefix + selectedYear); state = freshState(selectedYear); renderAll(); });
     document.getElementById("exportBtn").addEventListener("click", () => { state.lastBackupDate = todayIso(); saveState(false); const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" }); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = `budget-${selectedYear}-backup.json`; a.click(); URL.revokeObjectURL(url); renderAll(); });
     document.getElementById("importBtn").addEventListener("click", () => document.getElementById("importFile").click());
