@@ -385,9 +385,9 @@
     const defaultCategories = [
       { group: "Income", name: "Base Salary / Take-Home", type: "income", behavior: "income", planned: 3500 },
       { group: "Income", name: "Side Income", type: "income", behavior: "income", planned: 0 },
-      { group: "Savings", name: "HYSA Savings", type: "savings", behavior: "savings", planned: 500, goalKey: "hysa" },
+      { group: "Savings", name: "HYSA Savings", type: "savings", behavior: "savings", planned: 0, goalKey: "hysa" },
       { group: "Savings", name: "Roth IRA", type: "savings", behavior: "savings", planned: 0, goalKey: "roth" },
-      { group: "Savings", name: "Investments", type: "savings", behavior: "savings", planned: 0, goalKey: "emergency" },
+      { group: "Savings", name: "Investments", type: "savings", behavior: "savings", planned: 500, goalKey: "emergency" },
       { group: "Savings", name: "Vacation Savings", type: "savings", behavior: "savings", planned: 300, goalKey: "vacation" },
       { group: "Home", name: "Rent", type: "expense", behavior: "fixed", planned: 1500 },
       { group: "Home", name: "Utilities", type: "expense", behavior: "fixed", planned: 50 },
@@ -413,27 +413,27 @@
       { group: "Giving", name: "Charitable Contributions", type: "expense", behavior: "flexible", planned: 0 },
       { group: "Other", name: "Debt Payments", type: "expense", behavior: "fixed", planned: 0 },
       { group: "Other", name: "Miscellaneous", type: "expense", behavior: "flexible", planned: 75 },
-      { group: "Other", name: "Irregular / Annual Expenses", type: "expense", behavior: "flexible", planned: 200 }
+      { group: "Other", name: "Irregular Expenses", type: "expense", behavior: "flexible", planned: 200 }
     ];
 
     const defaultGoals = {
-      emergency: { name: "Investments", target: 11500, current: 0 },
+      emergency: { name: "Investments", target: 2500, current: 0 },
       roth: { name: "Roth IRA", target: 7500, current: 0 },
-      hysa: { name: "HYSA", target: 11500, current: 0 },
-      vacation: { name: "Vacation Fund", target: 1800, current: 0 }
+      hysa: { name: "HYSA", target: 13500, current: 0 },
+      vacation: { name: "Vacation Fund", target: 3600, current: 0 }
     };
 
     function freshState(year) {
       const manualActuals = {}; months.forEach((_, m) => manualActuals[m] = {});
       return {
         year,
-        settings: { monthlyIncome: 3500, checkingTarget: 1500, hysaTarget: 11500, commissionTax: 25, extraTaxReserve: 5, rothFromCommissionPct: 30, lowBufferTrigger: 300, weeklyScoreGoal: 85, backupReminderDays: 7 },
+        settings: { monthlyIncome: 3500, checkingTarget: 2500, hysaTarget: 13500, commissionTax: 25, extraTaxReserve: 5, rothFromCommissionPct: 30, lowBufferTrigger: 300, weeklyScoreGoal: 85, backupReminderDays: 7 },
         categories: JSON.parse(JSON.stringify(defaultCategories)),
         manualActuals,
         transactions: [],
         futureExpenses: [],
         goals: JSON.parse(JSON.stringify(defaultGoals)),
-        balances: { checking: 1500, hysa: 0 },
+        balances: { checking: 2500, hysa: 0 },
         commissions: [],
         dailyLog: { lastUpdated: "", streak: 0, updatedDates: [] },
         closeouts: {},
