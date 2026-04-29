@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Personal Budget OS</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --card: #ffffff;
+      --ink: #152235;
+      --muted: #667085;
+      --line: #d9e2ef;
+      --blue: #0f5f7a;
+      --blue-soft: #e7f4f8;
+      --green: #15803d;
+      --green-soft: #dcfce7;
+      --red: #b91c1c;
+      --red-soft: #fee2e2;
+      --amber: #b45309;
+      --amber-soft: #fef3c7;
+      --purple: #6d28d9;
+      --purple-soft: #ede9fe;
+      --shadow: 0 18px 45px rgba(15, 35, 55, 0.08);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: linear-gradient(135deg, #eef6fb 0%, #f8fafc 48%, #eef2ff 100%);
+      color: var(--ink);
+    }
+
+    header, main { max-width: 1380px; margin: 0 auto; }
+    header { padding: 24px 18px 12px; }
+    main { padding: 0 18px 36px; }
+
+    h1 { margin: 0 0 8px; font-size: clamp(1.75rem, 4vw, 3.1rem); letter-spacing: -0.05em; line-height: 1.05; }
+    h2 { margin: 0; font-size: 1.22rem; letter-spacing: -0.03em; }
+    h3 { margin: 0 0 10px; font-size: 1rem; }
+    p { margin: 0; }
+    .subtitle { color: var(--muted); max-width: 980px; font-size: 1rem; line-height: 1.5; }
+
+    .top-actions, .tabs, .button-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .top-actions { margin: 18px 0; }
+    .button-row { margin-top: 12px; }
+
+    button, select, input, textarea {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: white;
+      color: var(--ink);
+      font: inherit;
+      min-height: 42px;
+    }
+
+    textarea { border-radius: 14px; padding: 10px 12px; resize: vertical; min-height: 74px; width: 100%; }
+    select, input { padding: 9px 12px; outline: none; }
+    input[type="number"] { width: 122px; }
+    button { cursor: pointer; padding: 10px 14px; font-weight: 800; transition: 0.15s ease; }
+    button:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(15, 35, 55, 0.08); }
+    button.primary { background: var(--blue); color: white; border-color: var(--blue); }
+    button.danger { background: var(--red-soft); color: var(--red); border-color: #fecaca; }
+    button.soft { background: #f8fafc; color: var(--ink); }
+    button.green { background: var(--green-soft); color: var(--green); border-color: #bbf7d0; }
+    button.purple { background: var(--purple-soft); color: var(--purple); border-color: #ddd6fe; }
+
+    .tabs { margin: 12px 0 16px; }
+    .tab { padding: 10px 14px; border-radius: 999px; background: white; border: 1px solid var(--line); color: var(--muted); font-weight: 900; cursor: pointer; }
+    .tab.active { color: white; background: var(--blue); border-color: var(--blue); }
+
+    .grid { display: grid; gap: 16px; }
+    .summary-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); margin-bottom: 16px; }
+    .two-col { display: grid; grid-template-columns: 1.12fr 0.88fr; gap: 16px; }
+    .three-col { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+    .form-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; align-items: end; }
+    .mobile-first-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 16px; }
+
+    .card {
+      background: rgba(255,255,255,0.93);
+      border: 1px solid rgba(217, 226, 239, 0.95);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+      backdrop-filter: blur(10px);
+    }
+
+    .section { display: none; }
+    .section.active { display: block; }
+    .section-title { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 0 0 12px; }
+
+    .metric-title { color: var(--muted); font-size: 0.78rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 8px; }
+    .metric-value { font-size: clamp(1.35rem, 3vw, 2rem); font-weight: 950; letter-spacing: -0.045em; }
+    .metric-note { margin-top: 6px; color: var(--muted); font-size: 0.88rem; line-height: 1.35; }
+
+    label { display: block; color: var(--muted); font-size: 0.8rem; font-weight: 900; margin-bottom: 6px; }
+    .input-block input, .input-block select { width: 100%; border-radius: 12px; }
+
+    .table-wrap { overflow-x: auto; border-radius: 14px; border: 1px solid var(--line); background: white; }
+    table { width: 100%; border-collapse: collapse; min-width: 980px; }
+    th, td { padding: 10px; border-bottom: 1px solid var(--line); text-align: right; vertical-align: middle; white-space: nowrap; }
+    th:first-child, td:first-child { text-align: left; position: sticky; left: 0; background: white; z-index: 1; }
+    th { background: #f8fafc; color: #475467; font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.06em; }
+    th:first-child { background: #f8fafc; z-index: 2; }
+    .category-row td { background: var(--blue-soft); color: var(--blue); font-weight: 950; text-align: left; }
+    .category-row td:first-child { background: var(--blue-soft); }
+
+    .money-input { width: 100px; border-radius: 10px; text-align: right; padding: 8px; min-height: 38px; }
+    .wide-input { min-width: 180px; }
+
+    .status { display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; padding: 6px 9px; font-weight: 950; font-size: 0.8rem; min-width: 82px; }
+    .status.good { color: var(--green); background: var(--green-soft); }
+    .status.bad { color: var(--red); background: var(--red-soft); }
+    .status.warn { color: var(--amber); background: var(--amber-soft); }
+    .status.neutral { color: var(--muted); background: #f2f4f7; }
+    .status.purple { color: var(--purple); background: var(--purple-soft); }
+
+    .quick-add { display: grid; grid-template-columns: 1.2fr 1fr 1fr auto; gap: 10px; align-items: end; margin-top: 10px; }
+    .quick-presets { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+    .quick-preset { padding: 8px 11px; min-height: 38px; font-size: 0.9rem; background: var(--blue-soft); color: var(--blue); border-color: #c6e6ef; }
+    .quick-tip { margin-top: 10px; padding: 10px 12px; border-radius: 14px; background: #f8fafc; border: 1px solid var(--line); color: var(--muted); font-size: 0.9rem; line-height: 1.4; }
+
+    .coach-list, .progress-list, .transaction-list, .commission-list, .future-list { display: grid; gap: 10px; }
+    .coach-card, .transaction-item, .commission-item, .future-item { border: 1px solid var(--line); border-radius: 14px; padding: 12px; background: #fbfdff; }
+    .coach-card.good { background: var(--green-soft); border-color: #bbf7d0; }
+    .coach-card.bad { background: var(--red-soft); border-color: #fecaca; }
+    .coach-card.warn { background: var(--amber-soft); border-color: #fde68a; }
+    .coach-card.neutral { background: #f8fafc; }
+    .coach-card.purple { background: var(--purple-soft); border-color: #ddd6fe; }
+    .coach-card strong { display: block; margin-bottom: 3px; }
+    .small-note { color: var(--muted); font-size: 0.9rem; line-height: 1.45; }
+
+    .mobile-budget-cards { display: none; gap: 10px; }
+    .mobile-budget-card { border: 1px solid var(--line); border-radius: 16px; padding: 12px; background: white; }
+    .mobile-budget-card-head { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; margin-bottom: 9px; }
+    .mobile-budget-card h3 { margin: 0; font-size: 0.98rem; }
+    .mobile-budget-input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .mobile-budget-card input { width: 100%; border-radius: 12px; text-align: right; font-size: 16px; }
+
+    .progress-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 7px; }
+    .progress-name { font-weight: 950; }
+    .progress-numbers { color: var(--muted); font-size: 0.9rem; }
+    .bar { height: 13px; border-radius: 999px; background: #e5e7eb; overflow: hidden; }
+    .bar > div { height: 100%; border-radius: inherit; background: linear-gradient(90deg, #0f5f7a, #15803d); width: 0%; transition: width 0.25s ease; }
+
+    .meter { height: 22px; border-radius: 999px; background: linear-gradient(90deg, #fee2e2 0%, #fef3c7 45%, #dcfce7 75%); position: relative; overflow: hidden; border: 1px solid var(--line); }
+    .needle { position: absolute; top: -4px; bottom: -4px; width: 5px; background: #111827; border-radius: 999px; left: 0%; transition: left 0.25s ease; }
+
+    .mini-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
+    .mini-card { background: #f8fafc; border: 1px solid var(--line); border-radius: 14px; padding: 12px; }
+    .mini-card b { display: block; font-size: 1.05rem; margin-top: 4px; }
+
+    .item-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: start; }
+    .item-meta { color: var(--muted); font-size: 0.9rem; line-height: 1.45; margin-top: 3px; }
+
+    .month-closeout { display: grid; gap: 12px; }
+    .closeout-box { padding: 12px; border: 1px solid var(--line); border-radius: 14px; background: #f8fafc; }
+
+    .footer-note { margin-top: 16px; color: var(--muted); font-size: 0.88rem; text-align: center; }
+    .version { color: var(--muted); font-weight: 900; font-size: 0.82rem; }
+
+    @media (max-width: 950px) {
+      header { padding-top: 18px; }
+      .summary-grid, .two-col, .three-col, .form-grid, .mobile-first-grid, .mini-grid { grid-template-columns: 1fr; }
+      .top-actions > *, .tabs > * { flex: 1; }
+      .tab { text-align: center; }
+      .quick-add { grid-template-columns: 1fr; }
+      .quick-presets { display: grid; grid-template-columns: repeat(5, 1fr); }
+      .quick-preset { width: 100%; padding: 8px 6px; }
+      #monthlyTableWrap { display: none; }
+      .mobile-budget-cards { display: grid; }
+      input[type="number"] { width: 100%; }
+      .section-title > div { width: 100%; }
+      #monthSelect { width: 100%; min-height: 48px; }
+      .mobile-budget-card input, #quickAmount { font-size: 18px; }
+      .card { padding: 14px; border-radius: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="version">Budget Tool v1.0 Final Draft</div>
+    <h1>Personal Budget OS</h1>
+    <p class="subtitle">A practical budget system for base-salary living, commission discipline, quick phone logging, savings goals, future expenses, and month-end decisions.</p>
+    <div class="top-actions">
+      <select id="yearSelect" aria-label="Budget year"></select>
+      <button class="primary" id="saveBtn">Save Now</button>
+      <button id="exportBtn">Export Backup</button>
+      <button id="importBtn">Import Backup</button>
+      <input type="file" id="importFile" accept="application/json" style="display:none" />
+      <button class="danger" id="resetBtn">Reset This Year</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="grid summary-grid" id="summaryCards"></section>
+
+    <section class="mobile-first-grid" style="margin-bottom:16px;">
+      <div class="card">
+        <div class="section-title">
+          <h2>Quick Log Expense</h2>
+          <span class="status purple" id="dailyStatus">Daily Check</span>
+        </div>
+        <div class="quick-add">
+          <div class="input-block">
+            <label>Category</label>
+            <select id="quickCategory"></select>
+          </div>
+          <div class="input-block">
+            <label>Amount Spent</label>
+            <input type="number" inputmode="decimal" id="quickAmount" min="0" step="1" placeholder="25" />
+          </div>
+          <div class="input-block">
+            <label>Date</label>
+            <input type="date" id="quickDate" />
+          </div>
+          <button class="primary" id="quickAddBtn">Add</button>
+        </div>
+        <div class="quick-presets">
+          <button class="quick-preset" data-amount="5">+$5</button>
+          <button class="quick-preset" data-amount="10">+$10</button>
+          <button class="quick-preset" data-amount="25">+$25</button>
+          <button class="quick-preset" data-amount="50">+$50</button>
+          <button class="quick-preset" data-clear="true">Clear</button>
+        </div>
+        <div class="quick-tip">Phone use: log the purchase right when it happens. Pick a category, tap a preset or type the amount, and hit Add. Bigger edits can wait for your iPad or computer.</div>
+      </div>
+
+      <div class="card">
+        <div class="section-title"><h2>Budget Coach</h2></div>
+        <div class="coach-list" id="coachList"></div>
+      </div>
+    </section>
+
+    <div class="tabs">
+      <div class="tab active" data-tab="dashboard">Monthly</div>
+      <div class="tab" data-tab="transactions">Transactions</div>
+      <div class="tab" data-tab="weekly">Weekly</div>
+      <div class="tab" data-tab="future">Future Expenses</div>
+      <div class="tab" data-tab="commissions">Commissions</div>
+      <div class="tab" data-tab="goals">Savings</div>
+      <div class="tab" data-tab="closeout">Closeout</div>
+      <div class="tab" data-tab="yoy">Year View</div>
+      <div class="tab" data-tab="settings">Settings</div>
+    </div>
+
+    <section id="dashboard" class="section active card">
+      <div class="section-title">
+        <h2>Monthly Budget Dashboard</h2>
+        <div>
+          <label for="monthSelect">Month</label>
+          <select id="monthSelect"></select>
+        </div>
+      </div>
+      <div class="table-wrap" id="monthlyTableWrap"><table id="monthlyTable"></table></div>
+      <div id="mobileMonthlyCards" class="mobile-budget-cards"></div>
+    </section>
+
+    <section id="transactions" class="section">
+      <div class="two-col">
+        <div class="card">
+          <div class="section-title"><h2>Transaction Log</h2></div>
+          <div class="form-grid">
+            <div class="input-block"><label>Date</label><input type="date" id="txDate" /></div>
+            <div class="input-block"><label>Category</label><select id="txCategory"></select></div>
+            <div class="input-block"><label>Amount</label><input type="number" inputmode="decimal" id="txAmount" min="0" step="1" /></div>
+            <div class="input-block"><label>Merchant</label><input id="txMerchant" placeholder="Trader Joe's" /></div>
+          </div>
+          <div style="margin-top:10px;"><label>Note</label><textarea id="txNote" placeholder="Optional note"></textarea></div>
+          <div class="button-row"><button class="primary" id="addTxBtn">Add Transaction</button></div>
+          <p class="small-note" style="margin-top:10px;">Transactions automatically roll up into the monthly category totals. This is what lets you audit where the money actually went.</p>
+        </div>
+        <div class="card">
+          <div class="section-title"><h2>This Month's Transactions</h2></div>
+          <div class="transaction-list" id="transactionList"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="weekly" class="section card">
+      <div class="section-title"><h2>Weekly Flexible Spending Allowance</h2></div>
+      <div class="three-col" id="weeklyCards"></div>
+      <p class="small-note" style="margin-top:12px;">This uses flexible categories only, like dining, Uber, clothing, fun, hobbies, groceries, personal care, gifts, and miscellaneous. Fixed costs are separated because you usually cannot adjust them mid-month.</p>
+    </section>
+
+    <section id="future" class="section">
+      <div class="two-col">
+        <div class="card">
+          <div class="section-title"><h2>One-Time Future Expenses</h2></div>
+          <div class="form-grid">
+            <div class="input-block"><label>Name</label><input id="futureName" placeholder="Flight home" /></div>
+            <div class="input-block"><label>Due Date</label><input type="date" id="futureDate" /></div>
+            <div class="input-block"><label>Amount</label><input type="number" inputmode="decimal" id="futureAmount" min="0" step="10" /></div>
+            <div class="input-block"><label>Priority</label><select id="futurePriority"><option>Need</option><option>Want</option><option>Optional</option></select></div>
+          </div>
+          <div class="button-row"><button class="primary" id="addFutureBtn">Add Future Expense</button></div>
+          <p class="small-note" style="margin-top:10px;">The tool spreads the cost across the months before it hits, so flights, weddings, furniture, holidays, and repairs do not sneak up on you.</p>
+        </div>
+        <div class="card">
+          <div class="section-title"><h2>Upcoming Expenses</h2></div>
+          <div class="future-list" id="futureList"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="commissions" class="section">
+      <div class="two-col">
+        <div class="card">
+          <div class="section-title"><h2>Add Commission Check</h2></div>
+          <div class="form-grid">
+            <div class="input-block"><label>Date Received</label><input type="date" id="commissionDate" /></div>
+            <div class="input-block"><label>Gross Commission</label><input type="number" inputmode="decimal" id="grossCommission" min="0" step="50" placeholder="1800" /></div>
+            <div class="input-block"><label>Checking Balance</label><input type="number" inputmode="decimal" id="commissionChecking" min="0" step="50" /></div>
+            <div class="input-block"><label>HYSA Balance</label><input type="number" inputmode="decimal" id="commissionHysa" min="0" step="50" /></div>
+          </div>
+          <div class="mini-grid" id="commissionPreview"></div>
+          <div class="button-row"><button class="primary" id="addCommissionBtn">Add Commission</button></div>
+          <p class="small-note" style="margin-top:10px;">Net assumes your tax withholding setting. The cash buffer refills checking first, then HYSA, then excess. A separate tax reserve warning is included because withholding is only an estimate.</p>
+        </div>
+        <div class="card"><div class="section-title"><h2>Commission History</h2></div><div class="commission-list" id="commissionHistory"></div></div>
+      </div>
+    </section>
+
+    <section id="goals" class="section">
+      <div class="two-col">
+        <div class="card"><div class="section-title"><h2>Savings Goal Tracker</h2></div><div class="progress-list" id="goalTracker"></div></div>
+        <div class="card">
+          <div class="section-title"><h2>Safety & Stability Meter</h2></div>
+          <div class="form-grid" style="grid-template-columns:1fr 1fr;">
+            <div class="input-block"><label>Checking Balance</label><input type="number" inputmode="decimal" id="checkingBalance" min="0" step="50" /></div>
+            <div class="input-block"><label>HYSA Balance</label><input type="number" inputmode="decimal" id="hysaBalance" min="0" step="50" /></div>
+          </div>
+          <div style="margin-top:16px;display:grid;gap:12px;">
+            <div class="meter"><div class="needle" id="stabilityNeedle"></div></div>
+            <div class="metric-value" id="monthsCovered">0.0 months</div>
+            <div class="metric-note" id="stabilityStatus">Enter balances to see your safety status.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="closeout" class="section card">
+      <div class="section-title"><h2>Month-End Closeout</h2></div>
+      <div class="month-closeout" id="closeoutContent"></div>
+    </section>
+
+    <section id="yoy" class="section card">
+      <div class="section-title"><h2>January through December View</h2></div>
+      <div class="table-wrap"><table id="yearTable"></table></div>
+    </section>
+
+    <section id="settings" class="section card">
+      <div class="section-title"><h2>Income, Targets, Categories, and Rules</h2></div>
+      <div class="form-grid">
+        <div class="input-block"><label>Monthly Base Salary / Take-Home</label><input type="number" inputmode="decimal" id="monthlyIncome" min="0" step="50" /></div>
+        <div class="input-block"><label>Checking Target</label><input type="number" inputmode="decimal" id="checkingTarget" min="0" step="50" /></div>
+        <div class="input-block"><label>HYSA Target</label><input type="number" inputmode="decimal" id="hysaTarget" min="0" step="50" /></div>
+        <div class="input-block"><label>Commission Withholding %</label><input type="number" inputmode="decimal" id="commissionTax" min="0" max="60" step="1" /></div>
+        <div class="input-block"><label>Extra Tax Reserve %</label><input type="number" inputmode="decimal" id="extraTaxReserve" min="0" max="30" step="1" /></div>
+        <div class="input-block"><label>Low Buffer Trigger</label><input type="number" inputmode="decimal" id="lowBufferTrigger" min="0" step="25" /></div>
+        <div class="input-block"><label>Weekly Score Goal</label><input type="number" inputmode="decimal" id="weeklyScoreGoal" min="0" max="100" step="5" /></div>
+        <div class="input-block"><label>Backup Reminder Days</label><input type="number" inputmode="numeric" id="backupReminderDays" min="1" max="30" step="1" /></div>
+      </div>
+      <div class="table-wrap" style="margin-top:16px;"><table id="settingsTable"></table></div>
+      <p class="small-note" style="margin-top:10px;">Final-draft rule: fixed categories show structural decisions. Flexible categories show behavior decisions. That distinction is what makes the coach useful.</p>
+    </section>
+
+    <p class="footer-note">Private by default: data is stored in this browser using localStorage. Export backups regularly, especially before clearing browser data or switching devices.</p>
+  </main>
+
+  <script>
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const fullMonths = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const todayIso = () => new Date().toISOString().slice(0, 10);
+    const stateKeyPrefix = "personalBudgetOS_v1_";
+    const currentYear = new Date().getFullYear();
+    let selectedYear = currentYear;
+    let selectedMonth = new Date().getMonth();
+
+    const defaultCategories = [
+      { group: "Income", name: "Base Salary / Take-Home", type: "income", behavior: "income", planned: 3500 },
+      { group: "Income", name: "Side Income", type: "income", behavior: "income", planned: 0 },
+      { group: "Savings", name: "HYSA Savings", type: "savings", behavior: "savings", planned: 500, goalKey: "hysa" },
+      { group: "Savings", name: "Roth IRA", type: "savings", behavior: "savings", planned: 0, goalKey: "roth" },
+      { group: "Savings", name: "Emergency Fund", type: "savings", behavior: "savings", planned: 0, goalKey: "emergency" },
+      { group: "Savings", name: "Vacation Savings", type: "savings", behavior: "savings", planned: 300, goalKey: "vacation" },
+      { group: "Home", name: "Rent", type: "expense", behavior: "fixed", planned: 1500 },
+      { group: "Home", name: "Utilities", type: "expense", behavior: "fixed", planned: 50 },
+      { group: "Home", name: "Streaming Services", type: "expense", behavior: "fixed", planned: 50 },
+      { group: "Home", name: "Renters Insurance", type: "expense", behavior: "fixed", planned: 0 },
+      { group: "Transportation", name: "Public Transportation / Transit", type: "expense", behavior: "fixed", planned: 0 },
+      { group: "Transportation", name: "Uber / Rideshare", type: "expense", behavior: "flexible", planned: 100 },
+      { group: "Transportation", name: "Car Payment", type: "expense", behavior: "fixed", planned: 0 },
+      { group: "Transportation", name: "Fuel", type: "expense", behavior: "flexible", planned: 0 },
+      { group: "Transportation", name: "Auto Insurance", type: "expense", behavior: "fixed", planned: 0 },
+      { group: "Transportation", name: "Auto Maintenance", type: "expense", behavior: "flexible", planned: 0 },
+      { group: "Health", name: "Health Insurance", type: "expense", behavior: "fixed", planned: 0 },
+      { group: "Health", name: "Medical Out-of-Pocket", type: "expense", behavior: "flexible", planned: 50 },
+      { group: "Health", name: "Dental / Vision", type: "expense", behavior: "fixed", planned: 0 },
+      { group: "Daily Living", name: "Groceries", type: "expense", behavior: "flexible", planned: 200 },
+      { group: "Daily Living", name: "Dining Out / Date Nights", type: "expense", behavior: "flexible", planned: 200 },
+      { group: "Entertainment", name: "Fun / Social", type: "expense", behavior: "flexible", planned: 150 },
+      { group: "Entertainment", name: "Clothing / Shoes", type: "expense", behavior: "flexible", planned: 150 },
+      { group: "Entertainment", name: "Hobbies / Recreation", type: "expense", behavior: "flexible", planned: 100 },
+      { group: "Personal and Family", name: "Personal Care", type: "expense", behavior: "flexible", planned: 75 },
+      { group: "Personal and Family", name: "Haircut / Products", type: "expense", behavior: "flexible", planned: 50 },
+      { group: "Personal and Family", name: "Gifts / Celebrations", type: "expense", behavior: "flexible", planned: 50 },
+      { group: "Giving", name: "Charitable Contributions", type: "expense", behavior: "flexible", planned: 0 },
+      { group: "Other", name: "Debt Payments", type: "expense", behavior: "fixed", planned: 0 },
+      { group: "Other", name: "Miscellaneous", type: "expense", behavior: "flexible", planned: 75 },
+      { group: "Other", name: "Irregular / Annual Expenses", type: "expense", behavior: "flexible", planned: 200 }
+    ];
+
+    const defaultGoals = {
+      emergency: { name: "Emergency Fund", target: 11500, current: 0 },
+      roth: { name: "Roth IRA", target: 7500, current: 0 },
+      hysa: { name: "HYSA", target: 11500, current: 0 },
+      vacation: { name: "Vacation Fund", target: 1800, current: 0 }
+    };
+
+    function freshState(year) {
+      const manualActuals = {}; months.forEach((_, m) => manualActuals[m] = {});
+      return {
+        year,
+        settings: { monthlyIncome: 3500, checkingTarget: 1500, hysaTarget: 11500, commissionTax: 25, extraTaxReserve: 5, lowBufferTrigger: 300, weeklyScoreGoal: 85, backupReminderDays: 7 },
+        categories: JSON.parse(JSON.stringify(defaultCategories)),
+        manualActuals,
+        transactions: [],
+        futureExpenses: [],
+        goals: JSON.parse(JSON.stringify(defaultGoals)),
+        balances: { checking: 1500, hysa: 0 },
+        commissions: [],
+        dailyLog: { lastUpdated: "", streak: 0, updatedDates: [] },
+        closeouts: {},
+        lastBackupDate: ""
+      };
+    }
+
+    function mergeDefaults(saved, fresh) {
+      return { ...fresh, ...saved, settings: { ...fresh.settings, ...(saved.settings || {}) }, goals: { ...fresh.goals, ...(saved.goals || {}) }, balances: { ...fresh.balances, ...(saved.balances || {}) }, categories: saved.categories || fresh.categories, manualActuals: saved.manualActuals || saved.actuals || fresh.manualActuals, transactions: saved.transactions || [], futureExpenses: saved.futureExpenses || [], commissions: saved.commissions || [], dailyLog: saved.dailyLog || fresh.dailyLog, closeouts: saved.closeouts || {}, lastBackupDate: saved.lastBackupDate || "" };
+    }
+
+    function loadState(year) {
+      const saved = localStorage.getItem(stateKeyPrefix + year);
+      if (!saved) return freshState(year);
+      try { return mergeDefaults(JSON.parse(saved), freshState(year)); } catch { return freshState(year); }
+    }
+
+    let state = loadState(selectedYear);
+
+    function money(n) { return (Number(n) || 0).toLocaleString(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 0 }); }
+    function num(v) { return Number(v) || 0; }
+    function uid() { return crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()); }
+    function monthFromDate(dateStr) { const d = new Date(dateStr + "T00:00:00"); return Number.isFinite(d.getMonth()) ? d.getMonth() : selectedMonth; }
+    function daysBetween(a, b) { return Math.ceil((new Date(b) - new Date(a)) / 86400000); }
+
+    function markDailyDone() {
+      const t = todayIso();
+      if (!state.dailyLog.updatedDates.includes(t)) state.dailyLog.updatedDates.push(t);
+      state.dailyLog.updatedDates.sort();
+      state.dailyLog.lastUpdated = t;
+      let streak = 0;
+      let cursor = new Date(t + "T00:00:00");
+      while (state.dailyLog.updatedDates.includes(cursor.toISOString().slice(0,10))) { streak++; cursor.setDate(cursor.getDate() - 1); }
+      state.dailyLog.streak = streak;
+    }
+
+    function saveState(render = true) {
+      localStorage.setItem(stateKeyPrefix + selectedYear, JSON.stringify(state));
+      if (render) renderAll();
+    }
+
+    function categoryPlanned(cat) { return cat.name === "Base Salary / Take-Home" ? num(state.settings.monthlyIncome) : num(cat.planned); }
+    function transactionActualForCategory(monthIndex, idx) { return state.transactions.filter(t => monthFromDate(t.date) === monthIndex && Number(t.categoryIdx) === idx).reduce((s, t) => s + num(t.amount), 0); }
+    function actualForCategory(monthIndex, idx) {
+      const cat = state.categories[idx];
+      const txTotal = transactionActualForCategory(monthIndex, idx);
+      if (cat.type === "expense") return txTotal + num(state.manualActuals[monthIndex]?.[idx] || 0);
+      return state.manualActuals[monthIndex]?.[idx] ?? categoryPlanned(cat);
+    }
+
+    function futureMonthlyAllocation(monthIndex) {
+      const monthStart = new Date(selectedYear, monthIndex, 1);
+      const monthEnd = new Date(selectedYear, monthIndex + 1, 0);
+      return state.futureExpenses.reduce((sum, f) => {
+        if (!f.date || num(f.amount) <= 0) return sum;
+        const due = new Date(f.date + "T00:00:00");
+        if (due < monthStart) return sum;
+        const monthsLeft = Math.max(1, (due.getFullYear() - selectedYear) * 12 + due.getMonth() - monthIndex + 1);
+        return sum + num(f.amount) / monthsLeft;
+      }, 0);
+    }
+
+    function totalsForMonth(monthIndex) {
+      let plannedIncome = 0, actualIncome = 0, plannedSavings = 0, actualSavings = 0, plannedExpenses = 0, actualExpenses = 0, fixedExpenses = 0, flexibleExpenses = 0, flexiblePlanned = 0;
+      state.categories.forEach((cat, idx) => {
+        const planned = categoryPlanned(cat);
+        const actual = actualForCategory(monthIndex, idx);
+        if (cat.type === "income") { plannedIncome += planned; actualIncome += num(actual); }
+        if (cat.type === "savings") { plannedSavings += planned; actualSavings += num(actual); }
+        if (cat.type === "expense") {
+          plannedExpenses += planned; actualExpenses += num(actual);
+          if (cat.behavior === "fixed") fixedExpenses += num(actual);
+          if (cat.behavior === "flexible") { flexibleExpenses += num(actual); flexiblePlanned += planned; }
+        }
+      });
+      const futureAllocation = futureMonthlyAllocation(monthIndex);
+      plannedExpenses += futureAllocation;
+      return { plannedIncome, actualIncome, plannedSavings, actualSavings, plannedExpenses, actualExpenses, fixedExpenses, flexibleExpenses, flexiblePlanned, futureAllocation, plannedRemaining: plannedIncome - plannedSavings - plannedExpenses, actualRemaining: actualIncome - actualSavings - actualExpenses };
+    }
+
+    function yearTotals() { return months.reduce((acc, _, m) => { const t = totalsForMonth(m); Object.keys(t).forEach(k => acc[k] = (acc[k] || 0) + t[k]); return acc; }, {}); }
+    function expenseCategories() { return state.categories.map((c, i) => ({...c, idx:i})).filter(c => c.type === "expense"); }
+    function flexibleExpenseCategories() { return expenseCategories().filter(c => c.behavior === "flexible"); }
+    function weeklyFlexibleBudget() { return flexibleExpenseCategories().reduce((s, c) => s + categoryPlanned(c), 0) / 4.33; }
+    function thisWeekSpent() {
+      const now = new Date(); const start = new Date(now); start.setDate(now.getDate() - now.getDay()); start.setHours(0,0,0,0);
+      const flexIdx = new Set(flexibleExpenseCategories().map(c => c.idx));
+      return state.transactions.filter(t => flexIdx.has(Number(t.categoryIdx)) && new Date(t.date + "T00:00:00") >= start).reduce((s,t) => s + num(t.amount), 0);
+    }
+
+    function renderYearOptions() { const s = document.getElementById("yearSelect"); s.innerHTML = ""; for (let y = currentYear - 1; y <= currentYear + 5; y++) s.innerHTML += `<option value="${y}" ${y===selectedYear?"selected":""}>${y}</option>`; }
+    function renderMonthOptions() { document.getElementById("monthSelect").innerHTML = months.map((m,i)=>`<option value="${i}" ${i===selectedMonth?"selected":""}>${fullMonths[i]}</option>`).join(""); }
+
+    function renderSummary() {
+      const t = totalsForMonth(selectedMonth); const y = yearTotals(); const weekLeft = weeklyFlexibleBudget() - thisWeekSpent();
+      const cards = [["This Month Income", money(t.actualIncome), `Planned: ${money(t.plannedIncome)}`], ["This Month Expenses", money(t.actualExpenses), `Planned: ${money(t.plannedExpenses)} incl. ${money(t.futureAllocation)} future set-aside`], ["This Week Flexible Left", money(weekLeft), `Weekly budget: ${money(weeklyFlexibleBudget())}`], ["Year Remaining", money(y.actualRemaining), `Across ${selectedYear}`]];
+      document.getElementById("summaryCards").innerHTML = cards.map(c => `<div class="card"><div class="metric-title">${c[0]}</div><div class="metric-value">${c[1]}</div><div class="metric-note">${c[2]}</div></div>`).join("");
+    }
+
+    function renderCoach() {
+      const t = totalsForMonth(selectedMonth); const liquid = num(state.balances.checking) + num(state.balances.hysa); const lowTrigger = num(state.settings.lowBufferTrigger);
+      const weekBudget = weeklyFlexibleBudget(); const weekSpent = thisWeekSpent(); const weekScore = Math.max(0, Math.min(100, 100 - Math.max(0, weekSpent - weekBudget) / Math.max(weekBudget,1) * 100));
+      const diningIdx = state.categories.findIndex(c => c.name.includes("Dining")); const groceryIdx = state.categories.findIndex(c => c.name.includes("Groceries"));
+      const diningOver = actualForCategory(selectedMonth, diningIdx) > categoryPlanned(state.categories[diningIdx]);
+      const groceryOver = actualForCategory(selectedMonth, groceryIdx) > categoryPlanned(state.categories[groceryIdx]);
+      const today = todayIso();
+      const backupDays = state.lastBackupDate ? daysBetween(state.lastBackupDate, today) : 999;
+      const insights = [];
+      insights.push({ cls: state.dailyLog.lastUpdated === today ? "good" : "neutral", title: state.dailyLog.lastUpdated === today ? "Daily check done" : "Daily 2-minute check", text: state.dailyLog.lastUpdated === today ? `Streak: ${state.dailyLog.streak} day${state.dailyLog.streak === 1 ? "" : "s"}.` : "Log one expense or update one category today. Keep it easy." });
+      insights.push({ cls: liquid < lowTrigger ? "bad" : "good", title: liquid < lowTrigger ? "Buffer rule triggered" : "Buffer looks okay", text: liquid < lowTrigger ? `Liquid buffer is ${money(liquid)}. Tighten spending immediately until you are back above ${money(lowTrigger)}.` : `Liquid savings are ${money(liquid)}. Low-buffer trigger is ${money(lowTrigger)}.` });
+      insights.push({ cls: diningOver || groceryOver ? "warn" : "good", title: diningOver || groceryOver ? "Food spending needs attention" : "Food spending on track", text: diningOver || groceryOver ? "Groceries or dining is red. Adjust behavior first before raising the budget." : "Groceries and dining are currently inside plan." });
+      insights.push({ cls: weekScore >= num(state.settings.weeklyScoreGoal) ? "good" : "warn", title: `Weekly score: ${weekScore.toFixed(0)}/100`, text: weekSpent > weekBudget ? `You are ${money(weekSpent - weekBudget)} over this week's flexible pace.` : `You have ${money(weekBudget - weekSpent)} left for flexible spending this week.` });
+      insights.push({ cls: t.actualExpenses > t.plannedExpenses ? "bad" : "good", title: t.actualExpenses > t.plannedExpenses ? "Month is trending over" : "Month is trending under", text: t.actualExpenses > t.plannedExpenses ? `You are trending ${money(t.actualExpenses - t.plannedExpenses)} over plan.` : `You are ${money(t.plannedExpenses - t.actualExpenses)} under planned expenses.` });
+      insights.push({ cls: backupDays > num(state.settings.backupReminderDays) ? "warn" : "neutral", title: "Backup reminder", text: backupDays > num(state.settings.backupReminderDays) ? "Export a backup. localStorage is convenient, but not bulletproof." : `Last backup: ${state.lastBackupDate || "not recorded"}.` });
+      const unloggedCommissionReminder = state.commissions.length ? "Latest commission is logged." : "If commission hits, log it the same day so you do not mentally spend it twice.";
+      insights.push({ cls: "purple", title: "Commission rule", text: unloggedCommissionReminder });
+      document.getElementById("coachList").innerHTML = insights.map(i => `<div class="coach-card ${i.cls}"><strong>${i.title}</strong><span>${i.text}</span></div>`).join("");
+      document.getElementById("dailyStatus").textContent = state.dailyLog.lastUpdated === today ? `Streak ${state.dailyLog.streak}` : "Not done";
+    }
+
+    function renderCategorySelectors() {
+      const opts = expenseCategories().map(c => `<option value="${c.idx}">${c.group} · ${c.name}</option>`).join("");
+      ["quickCategory", "txCategory"].forEach(id => document.getElementById(id).innerHTML = opts);
+      ["quickDate", "txDate", "commissionDate"].forEach(id => { if (!document.getElementById(id).value) document.getElementById(id).value = todayIso(); });
+    }
+
+    function renderMonthlyTable() {
+      let html = `<thead><tr><th>Category</th><th>Kind</th><th>Planned</th><th>Actual</th><th>Difference</th><th>Status</th></tr></thead><tbody>`; let mobile = ""; let currentGroup = "";
+      state.categories.forEach((cat, idx) => {
+        if (cat.group !== currentGroup) { currentGroup = cat.group; html += `<tr class="category-row"><td colspan="6">${currentGroup}</td></tr>`; }
+        const planned = categoryPlanned(cat), actual = actualForCategory(selectedMonth, idx); const diff = cat.type === "income" ? actual - planned : planned - actual; const cls = diff > 0 ? "good" : diff < 0 ? "bad" : "neutral"; const label = diff > 0 ? "Surplus" : diff < 0 ? "Over" : "On Track";
+        const manual = state.manualActuals[selectedMonth]?.[idx] || 0;
+        html += `<tr><td>${cat.name}</td><td>${cat.behavior}</td><td>${money(planned)}</td><td><input class="money-input actual-input" type="number" inputmode="decimal" data-idx="${idx}" value="${cat.type === "expense" ? manual : actual}" step="10" /></td><td>${money(Math.abs(diff))}</td><td><span class="status ${cls}">${label}</span></td></tr>`;
+        mobile += `<div class="mobile-budget-card"><div class="mobile-budget-card-head"><div><h3>${cat.name}</h3><div class="small-note">${cat.group} · ${cat.behavior}</div></div><span class="status ${cls}">${label}</span></div><div class="mobile-budget-input-row"><div><label>Planned</label><input type="number" value="${planned}" disabled></div><div><label>${cat.type === "expense" ? "Manual add-on" : "Actual"}</label><input class="mobile-actual-input" type="number" inputmode="decimal" data-idx="${idx}" value="${cat.type === "expense" ? manual : actual}" step="10"></div></div><div class="metric-note">Total actual: ${money(actual)} · Difference: ${money(Math.abs(diff))}</div></div>`;
+      });
+      const t = totalsForMonth(selectedMonth);
+      html += `<tr class="category-row"><td colspan="6">Monthly Totals</td></tr><tr><td>Income</td><td></td><td>${money(t.plannedIncome)}</td><td>${money(t.actualIncome)}</td><td colspan="2"></td></tr><tr><td>Savings</td><td></td><td>${money(t.plannedSavings)}</td><td>${money(t.actualSavings)}</td><td colspan="2"></td></tr><tr><td>Expenses</td><td></td><td>${money(t.plannedExpenses)}</td><td>${money(t.actualExpenses)}</td><td colspan="2"></td></tr><tr><td><strong>Remaining</strong></td><td></td><td><strong>${money(t.plannedRemaining)}</strong></td><td><strong>${money(t.actualRemaining)}</strong></td><td colspan="2"></td></tr></tbody>`;
+      document.getElementById("monthlyTable").innerHTML = html; document.getElementById("mobileMonthlyCards").innerHTML = mobile;
+      document.querySelectorAll(".actual-input,.mobile-actual-input").forEach(input => input.addEventListener("input", e => { const idx = e.target.dataset.idx; state.manualActuals[selectedMonth][idx] = num(e.target.value); markDailyDone(); updateGoalContributions(); saveState(); }));
+    }
+
+    function addTransaction(date, idx, amount, merchant = "", note = "") {
+      if (!date || num(amount) <= 0) return alert("Enter a date and amount first.");
+      state.transactions.push({ id: uid(), date, categoryIdx: Number(idx), amount: num(amount), merchant, note });
+      markDailyDone(); updateGoalContributions(); saveState();
+    }
+
+    function renderTransactions() {
+      const list = state.transactions.filter(t => monthFromDate(t.date) === selectedMonth).sort((a,b)=>b.date.localeCompare(a.date));
+      document.getElementById("transactionList").innerHTML = list.length ? list.map(t => { const c = state.categories[t.categoryIdx]; return `<div class="transaction-item"><div class="item-row"><div><strong>${money(t.amount)} · ${c?.name || "Category"}</strong><div class="item-meta">${t.date}${t.merchant ? " · " + t.merchant : ""}${t.note ? " · " + t.note : ""}</div></div><button class="danger delete-tx" data-id="${t.id}">Delete</button></div></div>`; }).join("") : `<p class="small-note">No transactions logged for this month yet.</p>`;
+      document.querySelectorAll(".delete-tx").forEach(btn => btn.addEventListener("click", e => { state.transactions = state.transactions.filter(t => t.id !== e.target.dataset.id); updateGoalContributions(); saveState(); }));
+    }
+
+    function renderWeekly() {
+      const budget = weeklyFlexibleBudget(), spent = thisWeekSpent(), left = budget - spent, score = Math.max(0, Math.min(100, 100 - Math.max(0, spent - budget) / Math.max(budget,1) * 100));
+      document.getElementById("weeklyCards").innerHTML = [["Weekly Flexible Budget", money(budget), "Your realistic spendable number for the week"], ["Spent This Week", money(spent), spent > budget ? "Slow down" : "On pace"], ["Weekly Score", `${score.toFixed(0)}/100`, score >= num(state.settings.weeklyScoreGoal) ? "Strong" : "Needs attention"]].map(c => `<div class="mini-card"><span>${c[0]}</span><b>${c[1]}</b><div class="small-note">${c[2]}</div></div>`).join("");
+    }
+
+    function renderFuture() {
+      const list = [...state.futureExpenses].sort((a,b)=>a.date.localeCompare(b.date));
+      document.getElementById("futureList").innerHTML = list.length ? list.map(f => { const days = daysBetween(todayIso(), f.date); const monthly = num(f.amount) / Math.max(1, Math.ceil(days / 30)); return `<div class="future-item"><div class="item-row"><div><strong>${f.name} · ${money(f.amount)}</strong><div class="item-meta">Due ${f.date} · ${f.priority} · Set aside roughly ${money(monthly)}/month</div></div><button class="danger delete-future" data-id="${f.id}">Delete</button></div></div>`; }).join("") : `<p class="small-note">No future expenses added yet.</p>`;
+      document.querySelectorAll(".delete-future").forEach(btn => btn.addEventListener("click", e => { state.futureExpenses = state.futureExpenses.filter(f => f.id !== e.target.dataset.id); saveState(); }));
+    }
+
+    function calculateCommission(gross, checking, hysa) {
+      const taxRate = num(state.settings.commissionTax) / 100, reserveRate = num(state.settings.extraTaxReserve) / 100;
+      const net = gross * (1 - taxRate), taxReserve = gross * reserveRate, distributable = Math.max(0, net - taxReserve);
+      const longTerm = distributable * 0.6, cashBuffer = distributable * 0.2, lifestyle = distributable * 0.2;
+      const toChecking = Math.min(Math.max(num(state.settings.checkingTarget) - checking, 0), cashBuffer);
+      const remainingBuffer = cashBuffer - toChecking;
+      const toHysa = Math.min(Math.max(num(state.settings.hysaTarget) - hysa, 0), remainingBuffer);
+      const excess = Math.max(remainingBuffer - toHysa, 0);
+      return { net, taxReserve, distributable, longTerm, cashBuffer, lifestyle, toChecking, toHysa, excess };
+    }
+
+    function renderCommissionPreview() {
+      const c = calculateCommission(num(document.getElementById("grossCommission").value), num(document.getElementById("commissionChecking").value), num(document.getElementById("commissionHysa").value));
+      const items = [["Net After Withholding", c.net], ["Extra Tax Reserve", c.taxReserve], ["Long-Term", c.longTerm], ["Cash Buffer", c.cashBuffer], ["Lifestyle", c.lifestyle], ["To Checking", c.toChecking], ["To HYSA", c.toHysa], ["Excess Buffer", c.excess]];
+      document.getElementById("commissionPreview").innerHTML = items.map(i => `<div class="mini-card"><span>${i[0]}</span><b>${money(i[1])}</b></div>`).join("");
+    }
+
+    function renderCommissionHistory() {
+      const el = document.getElementById("commissionHistory");
+      el.innerHTML = state.commissions.length ? state.commissions.map((c,i)=>`<div class="commission-item"><div class="item-row"><div><strong>${c.date || "No date"} · Gross ${money(c.gross)} · Net ${money(c.net)}</strong><div class="item-meta">Reserve: ${money(c.taxReserve)} · Long-term: ${money(c.longTerm)} · Lifestyle: ${money(c.lifestyle)}<br>Refill: ${money(c.toChecking)} to checking, ${money(c.toHysa)} to HYSA, ${money(c.excess)} excess</div></div><button class="danger delete-commission" data-index="${i}">Delete</button></div></div>`).join("") : `<p class="small-note">No commission checks added yet.</p>`;
+      document.querySelectorAll(".delete-commission").forEach(btn => btn.addEventListener("click", e => { state.commissions.splice(Number(e.target.dataset.index),1); updateGoalContributions(); saveState(); }));
+    }
+
+    function updateGoalContributions() {
+      const base = JSON.parse(JSON.stringify(defaultGoals)); Object.keys(state.goals).forEach(k => { if (!base[k]) base[k] = state.goals[k]; base[k].target = num(state.goals[k].target); base[k].current = 0; });
+      state.categories.forEach((cat, idx) => { if (!cat.goalKey) return; months.forEach((_, m) => base[cat.goalKey].current += num(actualForCategory(m, idx))); });
+      state.commissions.forEach(c => { base.hysa.current += num(c.toHysa); base.emergency.current += num(c.longTerm) * 0.4; base.roth.current += num(c.longTerm) * 0.6; });
+      Object.keys(base).forEach(k => state.goals[k].current = base[k].current);
+    }
+
+    function renderGoals() {
+      document.getElementById("goalTracker").innerHTML = Object.entries(state.goals).map(([k,g]) => { const pct = Math.min(100, num(g.current)/Math.max(num(g.target),1)*100); return `<div><div class="progress-head"><div class="progress-name">${g.name}</div><div class="progress-numbers">${money(g.current)} / ${money(g.target)} · ${pct.toFixed(0)}%</div></div><div class="bar"><div style="width:${pct}%"></div></div></div>`; }).join("");
+      document.getElementById("checkingBalance").value = state.balances.checking; document.getElementById("hysaBalance").value = state.balances.hysa;
+      const avgCore = state.categories.filter(c => c.type === "expense").reduce((s,c)=>s+categoryPlanned(c),0); const liquid = num(state.balances.checking)+num(state.balances.hysa); const covered = liquid / Math.max(avgCore,1);
+      document.getElementById("monthsCovered").textContent = `${covered.toFixed(1)} months`; document.getElementById("stabilityNeedle").style.left = `${Math.min(100, covered/6*100)}%`;
+      const status = covered >= 5 ? "Strong" : covered >= 3 ? "Stable" : covered >= 1 ? "Thin" : "At Risk"; document.getElementById("stabilityStatus").textContent = `${status}: ${money(liquid)} liquid savings against roughly ${money(avgCore)} in monthly planned expenses.`;
+    }
+
+    function renderCloseout() {
+      const t = totalsForMonth(selectedMonth); const key = String(selectedMonth); const existing = state.closeouts[key] || {};
+      document.getElementById("closeoutContent").innerHTML = `<div class="closeout-box"><strong>${fullMonths[selectedMonth]} Result</strong><div class="item-meta">Income: ${money(t.actualIncome)} · Expenses: ${money(t.actualExpenses)} · Savings: ${money(t.actualSavings)} · Remaining: ${money(t.actualRemaining)}</div></div><div class="form-grid"><div class="input-block"><label>Surplus Decision</label><select id="closeoutDecision"><option ${existing.decision==="HYSA"?"selected":""}>HYSA</option><option ${existing.decision==="Roth IRA"?"selected":""}>Roth IRA</option><option ${existing.decision==="Vacation"?"selected":""}>Vacation</option><option ${existing.decision==="Next Month Buffer"?"selected":""}>Next Month Buffer</option></select></div><div class="input-block"><label>Amount to Move</label><input type="number" inputmode="decimal" id="closeoutAmount" value="${existing.amount ?? Math.max(0, t.actualRemaining)}"></div></div><div><label>What needs adjusting next month?</label><textarea id="closeoutNote">${existing.note || ""}</textarea></div><div class="button-row"><button class="primary" id="saveCloseoutBtn">Save Closeout</button></div>`;
+      document.getElementById("saveCloseoutBtn").addEventListener("click", () => { state.closeouts[key] = { decision: document.getElementById("closeoutDecision").value, amount: num(document.getElementById("closeoutAmount").value), note: document.getElementById("closeoutNote").value, savedAt: todayIso() }; saveState(); });
+    }
+
+    function renderYearTable() {
+      let html = `<thead><tr><th>Metric</th>${months.map(m=>`<th>${m}</th>`).join("")}<th>Total</th></tr></thead><tbody>`;
+      [["Actual Income","actualIncome"],["Actual Savings","actualSavings"],["Actual Expenses","actualExpenses"],["Flexible Expenses","flexibleExpenses"],["Future Set-Aside","futureAllocation"],["Actual Remaining","actualRemaining"],["Planned Remaining","plannedRemaining"]].forEach(([label,key])=>{ let total=0; html += `<tr><td>${label}</td>`; months.forEach((_,m)=>{ const v=totalsForMonth(m)[key]; total += v; const cls = key.includes("Remaining") ? (v>=0?"good":"bad") : "neutral"; html += `<td><span class="status ${cls}">${money(v)}</span></td>`; }); html += `<td><strong>${money(total)}</strong></td></tr>`; });
+      html += `</tbody>`; document.getElementById("yearTable").innerHTML = html;
+    }
+
+    function renderSettings() {
+      ["monthlyIncome","checkingTarget","hysaTarget","commissionTax","extraTaxReserve","lowBufferTrigger","weeklyScoreGoal","backupReminderDays"].forEach(id => document.getElementById(id).value = state.settings[id]);
+      let html = `<thead><tr><th>Category</th><th>Type</th><th>Fixed/Flexible</th><th>Monthly Planned</th></tr></thead><tbody>`;
+      state.categories.forEach((cat, idx) => { if (cat.name === "Base Salary / Take-Home") return; html += `<tr><td>${cat.group} · ${cat.name}</td><td>${cat.type}</td><td><select class="behavior-input" data-idx="${idx}"><option ${cat.behavior==="fixed"?"selected":""}>fixed</option><option ${cat.behavior==="flexible"?"selected":""}>flexible</option><option ${cat.behavior==="savings"?"selected":""}>savings</option><option ${cat.behavior==="income"?"selected":""}>income</option></select></td><td><input class="money-input planned-input" type="number" inputmode="decimal" data-idx="${idx}" value="${cat.planned}" step="10" /></td></tr>`; });
+      html += `</tbody>`; document.getElementById("settingsTable").innerHTML = html;
+      document.querySelectorAll(".planned-input").forEach(i => i.addEventListener("input", e => { state.categories[e.target.dataset.idx].planned = num(e.target.value); saveState(); }));
+      document.querySelectorAll(".behavior-input").forEach(i => i.addEventListener("change", e => { state.categories[e.target.dataset.idx].behavior = e.target.value; saveState(); }));
+    }
+
+    function renderAll() { renderYearOptions(); renderMonthOptions(); renderCategorySelectors(); renderSummary(); renderCoach(); renderMonthlyTable(); renderTransactions(); renderWeekly(); renderFuture(); renderCommissionPreview(); renderCommissionHistory(); renderGoals(); renderCloseout(); renderYearTable(); renderSettings(); }
+
+    document.querySelectorAll(".tab").forEach(tab => tab.addEventListener("click", () => { document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active")); document.querySelectorAll(".section").forEach(s=>s.classList.remove("active")); tab.classList.add("active"); document.getElementById(tab.dataset.tab).classList.add("active"); }));
+    document.getElementById("yearSelect").addEventListener("change", e => { selectedYear = Number(e.target.value); state = loadState(selectedYear); updateGoalContributions(); renderAll(); });
+    document.getElementById("monthSelect").addEventListener("change", e => { selectedMonth = Number(e.target.value); renderAll(); });
+    ["monthlyIncome","checkingTarget","hysaTarget","commissionTax","extraTaxReserve","lowBufferTrigger","weeklyScoreGoal","backupReminderDays"].forEach(id => document.getElementById(id).addEventListener("input", e => { state.settings[id] = num(e.target.value); saveState(); }));
+    ["grossCommission","commissionChecking","commissionHysa"].forEach(id => document.getElementById(id).addEventListener("input", renderCommissionPreview));
+    ["checkingBalance","hysaBalance"].forEach(id => document.getElementById(id).addEventListener("input", e => { state.balances[id === "checkingBalance" ? "checking" : "hysa"] = num(e.target.value); saveState(); }));
+    document.querySelectorAll(".quick-preset").forEach(btn => btn.addEventListener("click", () => { const i = document.getElementById("quickAmount"); if (btn.dataset.clear) { i.value = ""; i.focus(); return; } i.value = num(i.value) + num(btn.dataset.amount); i.focus(); }));
+    document.getElementById("quickAddBtn").addEventListener("click", () => { addTransaction(document.getElementById("quickDate").value, document.getElementById("quickCategory").value, document.getElementById("quickAmount").value); document.getElementById("quickAmount").value = ""; });
+    document.getElementById("addTxBtn").addEventListener("click", () => { addTransaction(document.getElementById("txDate").value, document.getElementById("txCategory").value, document.getElementById("txAmount").value, document.getElementById("txMerchant").value, document.getElementById("txNote").value); ["txAmount","txMerchant","txNote"].forEach(id=>document.getElementById(id).value=""); });
+    document.getElementById("addFutureBtn").addEventListener("click", () => { const name = document.getElementById("futureName").value || "Future Expense"; const date = document.getElementById("futureDate").value; const amount = num(document.getElementById("futureAmount").value); if (!date || amount <= 0) return alert("Enter a due date and amount."); state.futureExpenses.push({ id: uid(), name, date, amount, priority: document.getElementById("futurePriority").value }); ["futureName","futureDate","futureAmount"].forEach(id=>document.getElementById(id).value=""); saveState(); });
+    document.getElementById("addCommissionBtn").addEventListener("click", () => { const gross = num(document.getElementById("grossCommission").value); if (gross <= 0) return alert("Enter a gross commission amount first."); const checking = num(document.getElementById("commissionChecking").value), hysa = num(document.getElementById("commissionHysa").value), calc = calculateCommission(gross, checking, hysa); state.commissions.push({ id: uid(), date: document.getElementById("commissionDate").value, gross, checkingAtTime: checking, hysaAtTime: hysa, ...calc }); state.balances.checking = checking + calc.toChecking; state.balances.hysa = hysa + calc.toHysa; document.getElementById("grossCommission").value = ""; markDailyDone(); updateGoalContributions(); saveState(); });
+    document.getElementById("saveBtn").addEventListener("click", () => saveState());
+    document.getElementById("resetBtn").addEventListener("click", () => { if (!confirm("Export a backup first if you care about this data. Reset this year now?")) return; localStorage.removeItem(stateKeyPrefix + selectedYear); state = freshState(selectedYear); renderAll(); });
+    document.getElementById("exportBtn").addEventListener("click", () => { state.lastBackupDate = todayIso(); saveState(false); const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" }); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = `budget-${selectedYear}-backup.json`; a.click(); URL.revokeObjectURL(url); renderAll(); });
+    document.getElementById("importBtn").addEventListener("click", () => document.getElementById("importFile").click());
+    document.getElementById("importFile").addEventListener("change", e => { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = () => { try { state = mergeDefaults(JSON.parse(reader.result), freshState(selectedYear)); state.year = selectedYear; updateGoalContributions(); saveState(); } catch { alert("That JSON file could not be imported."); } }; reader.readAsText(file); });
+
+    updateGoalContributions(); renderAll();
+  </script>
+</body>
+</html>
