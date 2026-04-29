@@ -375,22 +375,7 @@
     <p class="footer-note">Private by default: data is stored in this browser using localStorage. Export backups regularly, especially before clearing browser data or switching devices.</p>
   </main>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyBf_uEblZz5e3w_6OTPCjvaLA3vhJfb_5A",
-      authDomain: "budget-tool-54423.firebaseapp.com",
-      projectId: "budget-tool-54423",
-      storageBucket: "budget-tool-54423.firebasestorage.app",
-      messagingSenderId: "173398411932",
-      appId: "1:173398411932:web:f5039163e41c91be577b59",
-      measurementId: "G-RJC1Z4F25T"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+  <script>
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const fullMonths = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
     const todayIso = () => new Date().toISOString().slice(0, 10);
@@ -462,24 +447,13 @@
       return { ...fresh, ...saved, settings: { ...fresh.settings, ...(saved.settings || {}) }, goals: { ...fresh.goals, ...(saved.goals || {}) }, balances: { ...fresh.balances, ...(saved.balances || {}) }, categories: saved.categories || fresh.categories, manualActuals: saved.manualActuals || saved.actuals || fresh.manualActuals, transactions: saved.transactions || [], futureExpenses: saved.futureExpenses || [], commissions: saved.commissions || [], dailyLog: saved.dailyLog || fresh.dailyLog, closeouts: saved.closeouts || {}, lastBackupDate: saved.lastBackupDate || "" };
     }
 
-    async function loadState(year) {
-      try {
-        const snap = await getDoc(doc(db, "budgets", String(year)));
-        if (snap.exists()) {
-          const cloudState = mergeDefaults(snap.data(), freshState(year));
-          localStorage.setItem(stateKeyPrefix + year, JSON.stringify(cloudState));
-          return cloudState;
-        }
-      } catch (err) {
-        console.warn("Firebase load failed, falling back to localStorage:", err);
-      }
-
+    function loadState(year) {
       const saved = localStorage.getItem(stateKeyPrefix + year);
       if (!saved) return freshState(year);
       try { return mergeDefaults(JSON.parse(saved), freshState(year)); } catch { return freshState(year); }
     }
 
-    let state = freshState(selectedYear);
+    let state = loadState(selectedYear);
 
     function money(n) { return (Number(n) || 0).toLocaleString(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 0 }); }
     function num(v) { return Number(v) || 0; }
@@ -500,8 +474,6 @@
 
     function saveState(render = true) {
       localStorage.setItem(stateKeyPrefix + selectedYear, JSON.stringify(state));
-      setDoc(doc(db, "budgets", String(selectedYear)), JSON.parse(JSON.stringify(state)))
-        .catch(err => console.warn("Firebase save failed, saved locally only:", err));
       if (render) renderAll();
     }
 
@@ -756,9 +728,7 @@
     function renderAll() { renderYearOptions(); renderMonthOptions(); renderCategorySelectors(); renderSummary(); renderCoach(); renderMonthlyTable(); renderTransactions(); renderWeekly(); renderFuture(); renderCommissionPreview(); renderCommissionHistory(); renderGoals(); renderCloseout(); renderYearTable(); renderSettings(); }
 
     document.querySelectorAll(".tab").forEach(tab => tab.addEventListener("click", () => { document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active")); document.querySelectorAll(".section").forEach(s=>s.classList.remove("active")); tab.classList.add("active"); document.getElementById(tab.dataset.tab).classList.add("active"); }));
-    document.getElementById("yearSelect").addEventListener("change", async e => { selectedYear = Number(e.target.value); state = await loadState(selstate = await loadState(selectedYear);
-    updateGoalContributions();
-    renderAll();renderAll(); });
+    document.getElementById("yearSelect").addEventListener("change", e => { selectedYear = Number(e.target.value); state = loadState(selectedYear); updateGoalContributions(); renderAll(); });
     document.getElementById("monthSelect").addEventListener("change", e => { selectedMonth = Number(e.target.value); renderAll(); });
     ["monthlyIncome","checkingTarget","hysaTarget","commissionTax","extraTaxReserve","rothFromCommissionPct","lowBufferTrigger","weeklyScoreGoal","backupReminderDays"].forEach(id => document.getElementById(id).addEventListener("input", e => { state.settings[id] = num(e.target.value); saveState(); }));
     ["grossCommission","commissionChecking","commissionHysa"].forEach(id => document.getElementById(id).addEventListener("input", renderCommissionPreview));
@@ -768,26 +738,7 @@
     document.getElementById("addTxBtn").addEventListener("click", () => { addTransaction(document.getElementById("txDate").value, document.getElementById("txCategory").value, document.getElementById("txAmount").value, document.getElementById("txMerchant").value, document.getElementById("txNote").value); ["txAmount","txMerchant","txNote"].forEach(id=>document.getElementById(id).value=""); });
     document.getElementById("addFutureBtn").addEventListener("click", () => { const name = document.getElementById("futureName").value || "Future Expense"; const date = document.getElementById("futureDate").value; const amount = num(document.getElementById("futureAmount").value); if (!date || amount <= 0) return alert("Enter a due date and amount."); state.futureExpenses.push({ id: uid(), name, date, amount, priority: document.getElementById("futurePriority").value }); ["futureName","futureDate","futureAmount"].forEach(id=>document.getElementById(id).value=""); saveState(); });
     document.getElementById("addCommissionBtn").addEventListener("click", () => { const gross = num(document.getElementById("grossCommission").value); if (gross <= 0) return alert("Enter a gross commission amount first."); const checking = num(document.getElementById("commissionChecking").value), hysa = num(document.getElementById("commissionHysa").value), calc = calculateCommission(gross, checking, hysa); state.commissions.push({ id: uid(), date: document.getElementById("commissionDate").value, gross, checkingAtTime: checking, hysaAtTime: hysa, ...calc }); state.balances.checking = checking + calc.toChecking; state.balances.hysa = hysa + calc.toHysa; document.getElementById("grossCommission").value = ""; markDailyDone(); updateGoalContributions(); saveState(); });
-    function syncSettingsFromInputs() {
-      ["monthlyIncome","checkingTarget","hysaTarget","commissionTax","extraTaxReserve","rothFromCommissionPct","lowBufferTrigger","weeklyScoreGoal","backupReminderDays"].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) state.settings[id] = num(el.value);
-      });
-
-      document.querySelectorAll(".planned-input").forEach(input => {
-        state.categories[input.dataset.idx].planned = num(input.value);
-      });
-
-      document.querySelectorAll(".behavior-input").forEach(input => {
-        state.categories[input.dataset.idx].behavior = input.value;
-      });
-    }
-
-    document.getElementById("saveBtn").addEventListener("click", () => {
-      syncSettingsFromInputs();
-      saveState();
-      alert("Saved.");
-    });
+    document.getElementById("saveBtn").addEventListener("click", () => saveState());
     document.getElementById("resetBtn").addEventListener("click", () => { if (!confirm("Export a backup first if you care about this data. Reset this year now?")) return; localStorage.removeItem(stateKeyPrefix + selectedYear); state = freshState(selectedYear); renderAll(); });
     document.getElementById("exportBtn").addEventListener("click", () => { state.lastBackupDate = todayIso(); saveState(false); const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" }); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = `budget-${selectedYear}-backup.json`; a.click(); URL.revokeObjectURL(url); renderAll(); });
     document.getElementById("importBtn").addEventListener("click", () => document.getElementById("importFile").click());
