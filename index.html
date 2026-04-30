@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Chicago Budget Tracker</title>
+  <title>Chicago Budget Lite</title>
   <style>
     :root {
       --bg: #f4f7fb;
@@ -162,6 +162,49 @@
     .footer-note { margin-top: 16px; color: var(--muted); font-size: 0.88rem; text-align: center; }
     .version { color: var(--muted); font-weight: 900; font-size: 0.82rem; }
 
+
+
+    /* Budget Lite simplification */
+    .advanced-actions { justify-content: flex-end; }
+    .lite-intro {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .simple-steps { display: grid; gap: 8px; margin-top: 12px; }
+    .simple-step {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #f8fafc;
+    }
+    .step-number {
+      width: 26px;
+      height: 26px;
+      border-radius: 999px;
+      background: var(--blue);
+      color: white;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 950;
+      flex: 0 0 auto;
+      font-size: 0.86rem;
+    }
+    .lite-title { font-size: 1.1rem; font-weight: 950; margin-bottom: 3px; }
+    .advanced-mode .advanced-actions { display: flex; }
+    body:not(.advanced-mode) .advanced-actions { display: none; }
+    .advanced-toggle-row { margin-top: 12px; display: flex; justify-content: flex-end; }
+    #advancedToggle { background: #f8fafc; }
+    .tabs .advanced-tab { display: none; }
+    .advanced-mode .tabs .advanced-tab { display: block; }
+    .lite-chip { display:inline-flex; align-items:center; padding: 6px 10px; border-radius:999px; background:var(--blue-soft); color:var(--blue); font-weight:900; font-size:.82rem; }
+    @media (max-width: 950px) { .lite-intro { grid-template-columns: 1fr; } .advanced-toggle-row { justify-content: stretch; } #advancedToggle { width: 100%; } }
+
     @media (max-width: 950px) {
       header { padding-top: 18px; }
       .summary-grid, .two-col, .three-col, .form-grid, .mobile-first-grid, .mini-grid { grid-template-columns: 1fr; }
@@ -182,26 +225,47 @@
 </head>
 <body>
   <header>
-    <div class="version">Budget Tool v1.0 Final Draft</div>
-    <h1>Personal Budget OS</h1>
-    <p class="subtitle">A practical budget system for base-salary living, commission discipline, quick phone logging, savings goals, future expenses, and month-end decisions.</p>
-    <div class="top-actions">
-      <select id="yearSelect" aria-label="Budget year"></select>
+    <div class="version">Chicago Budget Lite · First Year: Sept 2026 to Sept 2027</div>
+    <h1>Chicago First-Year Budget</h1>
+    <p class="subtitle">A simple everyday budget for Chicago: log spending, check what is left this month, and stay on track without overthinking it.</p>
+    <div class="top-actions advanced-actions">
+      <select id="yearSelect" aria-label="Budget period"></select>
       <button class="primary" id="saveBtn">Save Now</button>
       <button id="exportBtn">Export Backup</button>
       <button id="importBtn">Import Backup</button>
       <input type="file" id="importFile" accept="application/json" style="display:none" />
-      <button class="danger" id="resetBtn">Reset This Year</button>
+      <button class="danger" id="resetBtn">Reset This Budget</button>
     </div>
   </header>
 
   <main>
     <section class="grid summary-grid" id="summaryCards"></section>
 
+    <section class="lite-intro">
+      <div class="card">
+        <div class="section-title">
+          <h2>How to Use This Budget</h2>
+          <span class="lite-chip">Simple Mode</span>
+        </div>
+        <p class="small-note">This budget is meant to be used in quick check-ins, not treated like homework. Most days, just log what you spent. Once a week, check your flexible spending. Once a month, adjust the plan if reality changed.</p>
+        <div class="simple-steps">
+          <div class="simple-step"><span class="step-number">1</span><div><div class="lite-title">Log purchases as they happen</div><div class="small-note">Use the quick expense box below. Do not overthink notes or details unless you actually need them.</div></div></div>
+          <div class="simple-step"><span class="step-number">2</span><div><div class="lite-title">Check what is left</div><div class="small-note">Use the Today and This Month tabs to see if you are on pace.</div></div></div>
+          <div class="simple-step"><span class="step-number">3</span><div><div class="lite-title">Protect goals first</div><div class="small-note">Use the Goals tab for savings, future expenses, and longer-term money decisions.</div></div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title"><h2>Simple Rule</h2></div>
+        <p class="metric-value" style="font-size:1.65rem;">Spend less than planned. Save before lifestyle. Adjust monthly.</p>
+        <p class="metric-note">Advanced tools are still available, but they are hidden so the budget feels easier to use day to day.</p>
+        <div class="advanced-toggle-row"><button id="advancedToggle" class="soft">Show Advanced Tools</button></div>
+      </div>
+    </section>
+
     <section class="mobile-first-grid" style="margin-bottom:16px;">
       <div class="card">
         <div class="section-title">
-          <h2>Quick Log Expense</h2>
+          <h2>Today: Quick Expense Log</h2>
           <span class="status purple" id="dailyStatus">Daily Check</span>
         </div>
         <div class="quick-add">
@@ -226,30 +290,30 @@
           <button class="quick-preset" data-amount="50">+$50</button>
           <button class="quick-preset" data-clear="true">Clear</button>
         </div>
-        <div class="quick-tip">Phone use: log the purchase right when it happens. Pick a category, tap a preset or type the amount, and hit Add. Bigger edits can wait for your iPad or computer.</div>
+        <div class="quick-tip">Daily use: pick a category, enter the amount, and hit Add. That is the main habit. Everything else is secondary.</div>
       </div>
 
       <div class="card">
-        <div class="section-title"><h2>Budget Coach</h2></div>
+        <div class="section-title"><h2>On-Track Check</h2></div>
         <div class="coach-list" id="coachList"></div>
       </div>
     </section>
 
     <div class="tabs">
-      <div class="tab active" data-tab="dashboard">Monthly</div>
-      <div class="tab" data-tab="transactions">Transactions</div>
-      <div class="tab" data-tab="weekly">Weekly</div>
-      <div class="tab" data-tab="future">Future Expenses</div>
-      <div class="tab" data-tab="commissions">Commissions</div>
-      <div class="tab" data-tab="goals">Savings</div>
-      <div class="tab" data-tab="closeout">Closeout</div>
-      <div class="tab" data-tab="yoy">Year View</div>
-      <div class="tab" data-tab="settings">Settings</div>
+      <div class="tab active" data-tab="dashboard">This Month</div>
+      <div class="tab" data-tab="weekly">Today / Weekly</div>
+      <div class="tab" data-tab="goals">Goals</div>
+      <div class="tab advanced-tab" data-tab="transactions">Transactions</div>
+      <div class="tab advanced-tab" data-tab="future">Future Expenses</div>
+      <div class="tab advanced-tab" data-tab="commissions">Commissions</div>
+      <div class="tab advanced-tab" data-tab="closeout">Closeout</div>
+      <div class="tab advanced-tab" data-tab="yoy">Year View</div>
+      <div class="tab advanced-tab" data-tab="settings">Settings</div>
     </div>
 
     <section id="dashboard" class="section active card">
       <div class="section-title">
-        <h2>Monthly Budget Dashboard</h2>
+        <h2>This Month</h2>
         <div>
           <label for="monthSelect">Month</label>
           <select id="monthSelect"></select>
@@ -281,9 +345,9 @@
     </section>
 
     <section id="weekly" class="section card">
-      <div class="section-title"><h2>Weekly Flexible Spending Allowance</h2></div>
+      <div class="section-title"><h2>Today / Weekly Spending</h2></div>
       <div class="three-col" id="weeklyCards"></div>
-      <p class="small-note" style="margin-top:12px;">This uses flexible categories only, like dining, Uber, clothing, fun, hobbies, groceries, personal care, gifts, and miscellaneous. Fixed costs are separated because you usually cannot adjust them mid-month.</p>
+      <p class="small-note" style="margin-top:12px;">This focuses on flexible spending: food, Uber, clothing, fun, hobbies, groceries, personal care, gifts, and miscellaneous. Bills are separated because they usually do not change mid-month.</p>
     </section>
 
     <section id="future" class="section">
@@ -312,13 +376,13 @@
           <div class="section-title"><h2>Add Commission Check</h2></div>
           <div class="form-grid">
             <div class="input-block"><label>Date Received</label><input type="date" id="commissionDate" /></div>
-            <div class="input-block"><label>Gross Commission</label><input type="number" inputmode="decimal" id="grossCommission" min="0" step="50" placeholder="1800" /></div>
+            <div class="input-block"><label>Commission Received (After Tax)</label><input type="number" inputmode="decimal" id="netCommission" min="0" step="50" placeholder="1200" /></div>
             <div class="input-block"><label>Checking Balance</label><input type="number" inputmode="decimal" id="commissionChecking" min="0" step="50" /></div>
             <div class="input-block"><label>HYSA Balance</label><input type="number" inputmode="decimal" id="commissionHysa" min="0" step="50" /></div>
           </div>
           <div class="mini-grid" id="commissionPreview"></div>
           <div class="button-row"><button class="primary" id="addCommissionBtn">Add Commission</button></div>
-          <p class="small-note" style="margin-top:10px;">Net assumes your tax withholding setting. The cash buffer refills checking first, then HYSA, then excess. A separate tax reserve warning is included because withholding is only an estimate.</p>
+          <p class="small-note" style="margin-top:10px;">Use the amount that actually hits your bank account after payroll withholding. The tool then splits that received commission into long-term investing, cash buffer, and lifestyle money.</p>
         </div>
         <div class="card"><div class="section-title"><h2>Commission History</h2></div><div class="commission-list" id="commissionHistory"></div></div>
       </div>
@@ -326,10 +390,10 @@
 
     <section id="goals" class="section">
       <div class="two-col">
-        <div class="card"><div class="section-title"><h2>Savings Goal Tracker</h2></div>
-          <div class="mini-grid" id="rothReadyBox"></div><div class="progress-list" id="goalTracker"></div></div>
+        <div class="card"><div class="section-title"><h2>Goals & Savings</h2></div>
+          <div class="progress-list" id="goalTracker"></div></div>
         <div class="card">
-          <div class="section-title"><h2>Safety & Stability Meter</h2></div>
+          <div class="section-title"><h2>Emergency Buffer</h2></div>
           <div class="form-grid" style="grid-template-columns:1fr 1fr;">
             <div class="input-block"><label>Checking Balance</label><input type="number" inputmode="decimal" id="checkingBalance" min="0" step="50" /></div>
             <div class="input-block"><label>HYSA Balance</label><input type="number" inputmode="decimal" id="hysaBalance" min="0" step="50" /></div>
@@ -345,54 +409,51 @@
 
     <section id="closeout" class="section card">
       <div class="section-title"><h2>Month-End Closeout</h2></div>
-      <p class="small-note" style="margin-bottom:12px;">Use this tab at the end of each month to decide where leftover money goes. The default move is to push extra cash toward next year’s Roth IRA or additional investment savings.</p>
+      <p class="small-note" style="margin-bottom:12px;">Use this tab at the end of each month to decide where leftover money goes. The default move is to push extra cash toward HYSA, investments, vacation, or next month’s buffer.</p>
       <div class="month-closeout" id="closeoutContent"></div>
     </section>
 
     <section id="yoy" class="section card">
-      <div class="section-title"><h2>January through December View</h2></div>
-      <p class="small-note" style="margin-bottom:12px;">Use this tab to compare months side by side and spot trends across the full year. It helps you see whether your lifestyle is staying controlled as income, commissions, and spending change.</p>
+      <div class="section-title"><h2>First-Year View</h2></div>
+      <p class="small-note" style="margin-bottom:12px;">Use this tab to compare September 2026 through September 2027 side by side and spot trends across your first year It helps you see whether your lifestyle is staying controlled as income, commissions, and spending change.</p>
       <div class="table-wrap"><table id="yearTable"></table></div>
     </section>
 
     <section id="settings" class="section card">
       <div class="section-title"><h2>Income, Targets, Categories, and Rules</h2></div>
       <div class="form-grid">
-        <div class="input-block"><label>Monthly Base Salary / Take-Home</label><input type="number" inputmode="decimal" id="monthlyIncome" min="0" step="50" /></div>
         <div class="input-block"><label>Checking Target</label><input type="number" inputmode="decimal" id="checkingTarget" min="0" step="50" /></div>
         <div class="input-block"><label>HYSA Target</label><input type="number" inputmode="decimal" id="hysaTarget" min="0" step="50" /></div>
-        <div class="input-block"><label>Commission Withholding %</label><input type="number" inputmode="decimal" id="commissionTax" min="0" max="60" step="1" /></div>
-        <div class="input-block"><label>Extra Tax Reserve %</label><input type="number" inputmode="decimal" id="extraTaxReserve" min="0" max="30" step="1" /></div>
-        <div class="input-block"><label>% of Long-Term → Roth</label><input type="number" inputmode="decimal" id="rothFromCommissionPct" min="0" max="100" step="5" /></div>
         <div class="input-block"><label>Low Buffer Trigger</label><input type="number" inputmode="decimal" id="lowBufferTrigger" min="0" step="25" /></div>
         <div class="input-block"><label>Weekly Score Goal</label><input type="number" inputmode="decimal" id="weeklyScoreGoal" min="0" max="100" step="5" /></div>
         <div class="input-block"><label>Backup Reminder Days</label><input type="number" inputmode="numeric" id="backupReminderDays" min="1" max="30" step="1" /></div>
       </div>
       <div class="table-wrap" style="margin-top:16px;"><table id="settingsTable"></table></div>
-      <p class="small-note" style="margin-top:10px;">Final-draft rule: fixed categories show structural decisions. Flexible categories show behavior decisions. That distinction is what makes the coach useful.</p>
+      <p class="small-note" style="margin-top:10px;">Fixed categories show structural decisions. Flexible categories show behavior decisions. Commissions should be entered as the after-tax amount that actually lands in your bank account.</p>
     </section>
 
     <p class="footer-note">Private by default: data is stored in this browser using localStorage. Export backups regularly, especially before clearing browser data or switching devices.</p>
   </main>
 
   <script>
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    const fullMonths = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const months = ["Sep 2026", "Oct 2026", "Nov 2026", "Dec 2026", "Jan 2027", "Feb 2027", "Mar 2027", "Apr 2027", "May 2027", "Jun 2027", "Jul 2027", "Aug 2027", "Sep 2027"];
+    const fullMonths = ["September 2026", "October 2026", "November 2026", "December 2026", "January 2027", "February 2027", "March 2027", "April 2027", "May 2027", "June 2027", "July 2027", "August 2027", "September 2027"];
+    const budgetStartYear = 2026;
+    const budgetStartMonth = 8; // September, zero-indexed
+    const budgetMonths = months.map((_, i) => new Date(budgetStartYear, budgetStartMonth + i, 1));
     const todayIso = () => new Date().toISOString().slice(0, 10);
-    const stateKeyPrefix = "personalBudgetOS_v1_";
-    const currentYear = new Date().getFullYear();
-    let selectedYear = currentYear;
-    let selectedMonth = new Date().getMonth();
+    const stateKeyPrefix = "chicagoBudgetLite_sept2026_v1_";
+    let selectedYear = 2026;
+    let selectedMonth = 0;
 
     const defaultCategories = [
-      { group: "Income", name: "Base Salary / Take-Home", type: "income", behavior: "income", planned: 3500 },
+      { group: "Income", name: "Base Salary / Take-Home", type: "income", behavior: "income", planned: 0 },
       { group: "Income", name: "Side Income", type: "income", behavior: "income", planned: 0 },
       { group: "Savings", name: "HYSA Savings", type: "savings", behavior: "savings", planned: 500, goalKey: "hysa" },
-      { group: "Savings", name: "Roth IRA", type: "savings", behavior: "savings", planned: 0, goalKey: "roth" },
       { group: "Savings", name: "Investments", type: "savings", behavior: "savings", planned: 210, goalKey: "emergency" },
       { group: "Savings", name: "Vacation Savings", type: "savings", behavior: "savings", planned: 300, goalKey: "vacation" },
       { group: "Home", name: "Rent", type: "expense", behavior: "fixed", planned: 1500 },
-      { group: "Home", name: "Utilities", type: "expense", behavior: "fixed", planned: 50 },
+      { group: "Home", name: "Utilities", type: "expense", behavior: "flexible", planned: 50 },
       { group: "Home", name: "Streaming Services", type: "expense", behavior: "fixed", planned: 50 },
       { group: "Home", name: "Renters Insurance", type: "expense", behavior: "fixed", planned: 0 },
       { group: "Transportation", name: "Public Transportation / Transit", type: "expense", behavior: "fixed", planned: 0 },
@@ -420,7 +481,6 @@
 
     const defaultGoals = {
       emergency: { name: "Investments", target: 2500, current: 0 },
-      roth: { name: "Roth IRA", target: 7500, current: 0 },
       hysa: { name: "HYSA", target: 13500, current: 0 },
       vacation: { name: "Vacation Fund", target: 3600, current: 0 }
     };
@@ -429,7 +489,7 @@
       const manualActuals = {}; months.forEach((_, m) => manualActuals[m] = {});
       return {
         year,
-        settings: { monthlyIncome: 3500, checkingTarget: 2500, hysaTarget: 13500, commissionTax: 25, extraTaxReserve: 5, rothFromCommissionPct: 30, lowBufferTrigger: 300, weeklyScoreGoal: 85, backupReminderDays: 7 },
+        settings: { checkingTarget: 2500, hysaTarget: 13500, lowBufferTrigger: 300, weeklyScoreGoal: 85, backupReminderDays: 7 },
         categories: JSON.parse(JSON.stringify(defaultCategories)),
         manualActuals,
         transactions: [],
@@ -458,7 +518,12 @@
     function money(n) { return (Number(n) || 0).toLocaleString(undefined, { style: "currency", currency: "USD", maximumFractionDigits: 0 }); }
     function num(v) { return Number(v) || 0; }
     function uid() { return crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()); }
-    function monthFromDate(dateStr) { const d = new Date(dateStr + "T00:00:00"); return Number.isFinite(d.getMonth()) ? d.getMonth() : selectedMonth; }
+    function monthFromDate(dateStr) {
+      const d = new Date(dateStr + "T00:00:00");
+      if (!Number.isFinite(d.getMonth())) return selectedMonth;
+      const diff = (d.getFullYear() - budgetStartYear) * 12 + (d.getMonth() - budgetStartMonth);
+      return diff >= 0 && diff < months.length ? diff : selectedMonth;
+    }
     function daysBetween(a, b) { return Math.ceil((new Date(b) - new Date(a)) / 86400000); }
 
     function markDailyDone() {
@@ -477,7 +542,7 @@
       if (render) renderAll();
     }
 
-    function categoryPlanned(cat) { return cat.name === "Base Salary / Take-Home" ? num(state.settings.monthlyIncome) : num(cat.planned); }
+    function categoryPlanned(cat) { return num(cat.planned); }
     function transactionActualForCategory(monthIndex, idx) { return state.transactions.filter(t => monthFromDate(t.date) === monthIndex && Number(t.categoryIdx) === idx).reduce((s, t) => s + num(t.amount), 0); }
     function actualForCategory(monthIndex, idx) {
       const cat = state.categories[idx];
@@ -496,13 +561,13 @@
     }
 
     function futureMonthlyAllocation(monthIndex) {
-      const monthStart = new Date(selectedYear, monthIndex, 1);
-      const monthEnd = new Date(selectedYear, monthIndex + 1, 0);
+      const monthStart = budgetMonths[monthIndex];
+      const monthEnd = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
       return state.futureExpenses.reduce((sum, f) => {
         if (!f.date || num(f.amount) <= 0) return sum;
         const due = new Date(f.date + "T00:00:00");
         if (due < monthStart) return sum;
-        const monthsLeft = Math.max(1, (due.getFullYear() - selectedYear) * 12 + due.getMonth() - monthIndex + 1);
+        const monthsLeft = Math.max(1, (due.getFullYear() - monthStart.getFullYear()) * 12 + due.getMonth() - monthStart.getMonth() + 1);
         return sum + num(f.amount) / monthsLeft;
       }, 0);
     }
@@ -524,8 +589,8 @@
       plannedExpenses += futureAllocation;
       const plannedRemaining = plannedIncome - plannedSavings - plannedExpenses;
       const actualRemaining = actualIncome - actualSavings - actualExpenses;
-      const rothOverflow = Math.max(0, actualRemaining);
-      return { plannedIncome, actualIncome, plannedSavings, actualSavings, plannedExpenses, actualExpenses, fixedExpenses, flexibleExpenses, flexiblePlanned, futureAllocation, rothOverflow, plannedRemaining, actualRemaining };
+      const extraSaving = Math.max(0, actualRemaining);
+      return { plannedIncome, actualIncome, plannedSavings, actualSavings, plannedExpenses, actualExpenses, fixedExpenses, flexibleExpenses, flexiblePlanned, futureAllocation, extraSaving, plannedRemaining, actualRemaining };
     }
 
     function yearTotals() { return months.reduce((acc, _, m) => { const t = totalsForMonth(m); Object.keys(t).forEach(k => acc[k] = (acc[k] || 0) + t[k]); return acc; }, {}); }
@@ -538,34 +603,46 @@
       return state.transactions.filter(t => flexIdx.has(Number(t.categoryIdx)) && new Date(t.date + "T00:00:00") >= start).reduce((s,t) => s + num(t.amount), 0);
     }
 
-    function renderYearOptions() { const s = document.getElementById("yearSelect"); s.innerHTML = ""; for (let y = currentYear - 1; y <= currentYear + 5; y++) s.innerHTML += `<option value="${y}" ${y===selectedYear?"selected":""}>${y}</option>`; }
+    function renderYearOptions() {
+      const s = document.getElementById("yearSelect");
+      s.innerHTML = '<option value="2026" selected>Sept 2026 to Sept 2027</option>';
+    }
     function renderMonthOptions() { document.getElementById("monthSelect").innerHTML = months.map((m,i)=>`<option value="${i}" ${i===selectedMonth?"selected":""}>${fullMonths[i]}</option>`).join(""); }
 
     function renderSummary() {
       const t = totalsForMonth(selectedMonth); const y = yearTotals(); const weekLeft = weeklyFlexibleBudget() - thisWeekSpent();
-      const cards = [["This Month Income", money(t.actualIncome), `Planned: ${money(t.plannedIncome)}`], ["This Month Expenses", money(t.actualExpenses), `Planned: ${money(t.plannedExpenses)} incl. ${money(t.futureAllocation)} future set-aside`], ["This Week Flexible Left", money(weekLeft), `Weekly budget: ${money(weeklyFlexibleBudget())}`], ["Roth / Extra Investing", money(t.rothOverflow), "Monthly leftover after spending and savings"]];
+      const cards = [["Income", money(t.actualIncome), `Planned: ${money(t.plannedIncome)}`], ["Expenses", money(t.actualExpenses), `Planned: ${money(t.plannedExpenses)}`], ["Flexible Left This Week", money(weekLeft), `Weekly budget: ${money(weeklyFlexibleBudget())}`], ["Leftover / Extra Saving", money(t.extraSaving), "After spending and planned savings"]];
       document.getElementById("summaryCards").innerHTML = cards.map(c => `<div class="card"><div class="metric-title">${c[0]}</div><div class="metric-value">${c[1]}</div><div class="metric-note">${c[2]}</div></div>`).join("");
     }
 
     function renderCoach() {
-      const t = totalsForMonth(selectedMonth); const liquid = num(state.balances.checking) + num(state.balances.hysa); const lowTrigger = num(state.settings.lowBufferTrigger);
-      const weekBudget = weeklyFlexibleBudget(); const weekSpent = thisWeekSpent(); const weekScore = Math.max(0, Math.min(100, 100 - Math.max(0, weekSpent - weekBudget) / Math.max(weekBudget,1) * 100));
-      const diningIdx = state.categories.findIndex(c => c.name.includes("Dining")); const groceryIdx = state.categories.findIndex(c => c.name.includes("Groceries"));
-      const diningOver = actualForCategory(selectedMonth, diningIdx) > categoryPlanned(state.categories[diningIdx]);
-      const groceryOver = actualForCategory(selectedMonth, groceryIdx) > categoryPlanned(state.categories[groceryIdx]);
+      const t = totalsForMonth(selectedMonth);
+      const weekBudget = weeklyFlexibleBudget();
+      const weekSpent = thisWeekSpent();
+      const weekLeft = weekBudget - weekSpent;
       const today = todayIso();
-      const backupDays = state.lastBackupDate ? daysBetween(state.lastBackupDate, today) : 999;
       const insights = [];
-      insights.push({ cls: state.dailyLog.lastUpdated === today ? "good" : "neutral", title: state.dailyLog.lastUpdated === today ? "Daily check done" : "Daily 2-minute check", text: state.dailyLog.lastUpdated === today ? `Streak: ${state.dailyLog.streak} day${state.dailyLog.streak === 1 ? "" : "s"}.` : "Log one expense or update one category today. Keep it easy." });
-      insights.push({ cls: liquid < lowTrigger ? "bad" : "good", title: liquid < lowTrigger ? "Buffer rule triggered" : "Buffer looks okay", text: liquid < lowTrigger ? `Liquid buffer is ${money(liquid)}. Tighten spending immediately until you are back above ${money(lowTrigger)}.` : `Liquid savings are ${money(liquid)}. Low-buffer trigger is ${money(lowTrigger)}.` });
-      insights.push({ cls: diningOver || groceryOver ? "warn" : "good", title: diningOver || groceryOver ? "Food spending needs attention" : "Food spending on track", text: diningOver || groceryOver ? "Groceries or dining is red. Adjust behavior first before raising the budget." : "Groceries and dining are currently inside plan." });
-      insights.push({ cls: weekScore >= num(state.settings.weeklyScoreGoal) ? "good" : "warn", title: `Weekly score: ${weekScore.toFixed(0)}/100`, text: weekSpent > weekBudget ? `You are ${money(weekSpent - weekBudget)} over this week's flexible pace.` : `You have ${money(weekBudget - weekSpent)} left for flexible spending this week.` });
-      insights.push({ cls: t.actualExpenses > t.plannedExpenses ? "bad" : "good", title: t.actualExpenses > t.plannedExpenses ? "Month is trending over" : "Month is trending under", text: t.actualExpenses > t.plannedExpenses ? `You are trending ${money(t.actualExpenses - t.plannedExpenses)} over plan.` : `You are ${money(t.plannedExpenses - t.actualExpenses)} under planned expenses.` });
-      insights.push({ cls: backupDays > num(state.settings.backupReminderDays) ? "warn" : "neutral", title: "Backup reminder", text: backupDays > num(state.settings.backupReminderDays) ? "Export a backup. localStorage is convenient, but not bulletproof." : `Last backup: ${state.lastBackupDate || "not recorded"}.` });
-      const unloggedCommissionReminder = state.commissions.length ? "Latest commission is logged." : "If commission hits, log it the same day so you do not mentally spend it twice.";
-      insights.push({ cls: "purple", title: "Commission rule", text: unloggedCommissionReminder });
+
+      insights.push({
+        cls: state.dailyLog.lastUpdated === today ? "good" : "neutral",
+        title: state.dailyLog.lastUpdated === today ? "Logged today" : "Log one thing today",
+        text: state.dailyLog.lastUpdated === today ? `You are current. Streak: ${state.dailyLog.streak} day${state.dailyLog.streak === 1 ? "" : "s"}.` : "Add one purchase or update one category. Keep the habit tiny."
+      });
+
+      insights.push({
+        cls: weekLeft >= 0 ? "good" : "warn",
+        title: weekLeft >= 0 ? "Weekly spending is on pace" : "Weekly spending is running hot",
+        text: weekLeft >= 0 ? `You have ${money(weekLeft)} left for flexible spending this week.` : `You are ${money(Math.abs(weekLeft))} over this week's flexible pace. Slow down before changing the budget.`
+      });
+
+      insights.push({
+        cls: t.actualRemaining >= 0 ? "good" : "bad",
+        title: t.actualRemaining >= 0 ? "Month is on track" : "Month needs attention",
+        text: t.actualRemaining >= 0 ? `Projected leftover is ${money(t.actualRemaining)} after spending and planned savings.` : `You are ${money(Math.abs(t.actualRemaining))} over after spending and planned savings.`
+      });
+
       document.getElementById("coachList").innerHTML = insights.map(i => `<div class="coach-card ${i.cls}"><strong>${i.title}</strong><span>${i.text}</span></div>`).join("");
-      document.getElementById("dailyStatus").textContent = state.dailyLog.lastUpdated === today ? `Streak ${state.dailyLog.streak}` : "Not done";
+      document.getElementById("dailyStatus").textContent = state.dailyLog.lastUpdated === today ? `Logged` : "Not logged";
     }
 
     function renderCategorySelectors() {
@@ -612,39 +689,31 @@
       document.querySelectorAll(".delete-future").forEach(btn => btn.addEventListener("click", e => { state.futureExpenses = state.futureExpenses.filter(f => f.id !== e.target.dataset.id); saveState(); }));
     }
 
-    function calculateCommission(gross, checking, hysa) {
-      const taxRate = num(state.settings.commissionTax) / 100;
-      const reserveRate = num(state.settings.extraTaxReserve) / 100;
-      const rothPct = num(state.settings.rothFromCommissionPct) / 100;
-
-      const net = gross * (1 - taxRate);
-      const taxReserve = gross * reserveRate;
-      const distributable = Math.max(0, net - taxReserve);
+    function calculateCommission(received, checking, hysa) {
+      const distributable = Math.max(0, num(received));
 
       const longTerm = distributable * 0.6;
+      const investAlloc = longTerm;
       const cashBuffer = distributable * 0.2;
       const lifestyle = distributable * 0.2;
-
-      const rothAlloc = longTerm * rothPct;
-      const investAlloc = longTerm - rothAlloc;
 
       const toChecking = Math.min(Math.max(num(state.settings.checkingTarget) - checking, 0), cashBuffer);
       const remainingBuffer = cashBuffer - toChecking;
       const toHysa = Math.min(Math.max(num(state.settings.hysaTarget) - hysa, 0), remainingBuffer);
       const excess = Math.max(remainingBuffer - toHysa, 0);
 
-      return { net, taxReserve, distributable, longTerm, rothAlloc, investAlloc, cashBuffer, lifestyle, toChecking, toHysa, excess };
+      return { received: distributable, net: distributable, distributable, longTerm, investAlloc, cashBuffer, lifestyle, toChecking, toHysa, excess };
     }
 
     function renderCommissionPreview() {
-      const c = calculateCommission(num(document.getElementById("grossCommission").value), num(document.getElementById("commissionChecking").value), num(document.getElementById("commissionHysa").value));
-      const items = [["Net After Withholding", c.net], ["Extra Tax Reserve", c.taxReserve], ["Roth Allocation", c.rothAlloc], ["Other Investments", c.investAlloc], ["Long-Term Total", c.longTerm], ["Cash Buffer", c.cashBuffer], ["Lifestyle", c.lifestyle], ["To Checking", c.toChecking], ["To HYSA", c.toHysa], ["Excess Buffer", c.excess]];
+      const c = calculateCommission(num(document.getElementById("netCommission").value), num(document.getElementById("commissionChecking").value), num(document.getElementById("commissionHysa").value));
+      const items = [["Commission Received", c.received], ["Long-Term Investing", c.investAlloc], ["Cash Buffer", c.cashBuffer], ["Lifestyle", c.lifestyle], ["To Checking", c.toChecking], ["To HYSA", c.toHysa], ["Excess Buffer", c.excess]];
       document.getElementById("commissionPreview").innerHTML = items.map(i => `<div class="mini-card"><span>${i[0]}</span><b>${money(i[1])}</b></div>`).join("");
     }
 
     function renderCommissionHistory() {
       const el = document.getElementById("commissionHistory");
-      el.innerHTML = state.commissions.length ? state.commissions.map((c,i)=>`<div class="commission-item"><div class="item-row"><div><strong>${c.date || "No date"} · Gross ${money(c.gross)} · Net ${money(c.net)}</strong><div class="item-meta">Reserve: ${money(c.taxReserve)} · Long-term: ${money(c.longTerm)} · Lifestyle: ${money(c.lifestyle)}<br>Refill: ${money(c.toChecking)} to checking, ${money(c.toHysa)} to HYSA, ${money(c.excess)} excess</div></div><button class="danger delete-commission" data-index="${i}">Delete</button></div></div>`).join("") : `<p class="small-note">No commission checks added yet.</p>`;
+      el.innerHTML = state.commissions.length ? state.commissions.map((c,i)=>`<div class="commission-item"><div class="item-row"><div><strong>${c.date || "No date"} · Received ${money(c.received || c.net || c.gross)}</strong><div class="item-meta">Long-term investing: ${money(c.investAlloc || c.longTerm)} · Lifestyle: ${money(c.lifestyle)}<br>Refill: ${money(c.toChecking)} to checking, ${money(c.toHysa)} to HYSA, ${money(c.excess)} excess</div></div><button class="danger delete-commission" data-index="${i}">Delete</button></div></div>`).join("") : `<p class="small-note">No commission checks added yet.</p>`;
       document.querySelectorAll(".delete-commission").forEach(btn => btn.addEventListener("click", e => { state.commissions.splice(Number(e.target.dataset.index),1); updateGoalContributions(); saveState(); }));
     }
 
@@ -653,52 +722,15 @@
       state.categories.forEach((cat, idx) => { if (!cat.goalKey) return; months.forEach((_, m) => base[cat.goalKey].current += num(actualForCategory(m, idx))); });
       state.commissions.forEach(c => {
         base.hysa.current += num(c.toHysa);
-        base.roth.current += num(c.rothAlloc);
         base.emergency.current += num(c.investAlloc);
       });
       Object.keys(base).forEach(k => state.goals[k].current = base[k].current);
     }
 
     function renderGoals() {
-      // Roth Ready Meter
-      const rothTarget = num(state.goals.roth.target);
-      const rothCurrent = num(state.goals.roth.current);
-      const rothPct = Math.min(100, (rothCurrent / Math.max(rothTarget,1)) * 100);
-      document.getElementById("rothReadyBox").innerHTML = `
-        <div class="mini-card">
-          <span>Roth Ready</span>
-          <b>${money(rothCurrent)} / ${money(rothTarget)}</b>
-          <div class="bar" style="margin-top:6px;"><div style="width:${rothPct}%"></div></div>
-          <div class="small-note">${rothPct.toFixed(0)}% funded toward yearly contribution</div>
-          <div class="button-row" style="margin-top:8px;">
-            <button class="primary" id="executeRothBtn">Execute Roth Contribution</button>
-          </div>
-        </div>
-      `;
       document.getElementById("goalTracker").innerHTML = Object.entries(state.goals).map(([k,g]) => { const pct = Math.min(100, num(g.current)/Math.max(num(g.target),1)*100); return `<div><div class="progress-head"><div class="progress-name">${g.name}</div><div class="progress-numbers">${money(g.current)} / ${money(g.target)} · ${pct.toFixed(0)}%</div></div><div class="bar"><div style="width:${pct}%"></div></div></div>`; }).join("");
       document.getElementById("checkingBalance").value = state.balances.checking;
-
-      // Roth execution button
-      const btn = document.getElementById("executeRothBtn");
-      if (btn) {
-        btn.onclick = () => {
-          const amt = num(state.goals.roth.current);
-          if (amt <= 0) return alert("No Roth funds accumulated yet.");
-
-          // log into current month as Roth contribution
-          const rothIdx = state.categories.findIndex(c => c.goalKey === "roth");
-          state.manualActuals[selectedMonth][rothIdx] = (state.manualActuals[selectedMonth][rothIdx] || 0) + amt;
-
-          // deduct from HYSA first (simplified assumption)
-          state.balances.hysa = Math.max(0, num(state.balances.hysa) - amt);
-
-          // reset tracker
-          state.goals.roth.current = 0;
-
-          alert(`Roth contribution of ${money(amt)} logged.`);
-          saveState();
-        };
-      } document.getElementById("hysaBalance").value = state.balances.hysa;
+      document.getElementById("hysaBalance").value = state.balances.hysa;
       const avgCore = state.categories.filter(c => c.type === "expense").reduce((s,c)=>s+categoryPlanned(c),0); const liquid = num(state.balances.checking)+num(state.balances.hysa); const covered = liquid / Math.max(avgCore,1);
       document.getElementById("monthsCovered").textContent = `${covered.toFixed(1)} months`; document.getElementById("stabilityNeedle").style.left = `${Math.min(100, covered/6*100)}%`;
       const status = covered >= 5 ? "Strong" : covered >= 3 ? "Stable" : covered >= 1 ? "Thin" : "At Risk"; document.getElementById("stabilityStatus").textContent = `${status}: ${money(liquid)} liquid savings against roughly ${money(avgCore)} in monthly planned expenses.`;
@@ -706,20 +738,20 @@
 
     function renderCloseout() {
       const t = totalsForMonth(selectedMonth); const key = String(selectedMonth); const existing = state.closeouts[key] || {};
-      document.getElementById("closeoutContent").innerHTML = `<div class="closeout-box"><strong>${fullMonths[selectedMonth]} Result</strong><div class="item-meta">Income: ${money(t.actualIncome)} · Expenses: ${money(t.actualExpenses)} · Savings: ${money(t.actualSavings)} · Remaining: ${money(t.actualRemaining)}</div></div><div class="form-grid"><div class="input-block"><label>Surplus Decision</label><select id="closeoutDecision"><option ${existing.decision==="HYSA"?"selected":""}>HYSA</option><option ${existing.decision==="Roth IRA"?"selected":""}>Roth IRA</option><option ${existing.decision==="Vacation"?"selected":""}>Vacation</option><option ${existing.decision==="Next Month Buffer"?"selected":""}>Next Month Buffer</option></select></div><div class="input-block"><label>Amount to Move</label><input type="number" inputmode="decimal" id="closeoutAmount" value="${existing.amount ?? Math.max(0, t.actualRemaining)}"></div></div><div><label>What needs adjusting next month?</label><textarea id="closeoutNote">${existing.note || ""}</textarea></div><div class="button-row"><button class="primary" id="saveCloseoutBtn">Save Closeout</button></div>`;
+      document.getElementById("closeoutContent").innerHTML = `<div class="closeout-box"><strong>${fullMonths[selectedMonth]} Result</strong><div class="item-meta">Income: ${money(t.actualIncome)} · Expenses: ${money(t.actualExpenses)} · Savings: ${money(t.actualSavings)} · Remaining: ${money(t.actualRemaining)}</div></div><div class="form-grid"><div class="input-block"><label>Surplus Decision</label><select id="closeoutDecision"><option ${existing.decision==="HYSA"?"selected":""}>HYSA</option><option ${existing.decision==="Investments"?"selected":""}>Investments</option><option ${existing.decision==="Vacation"?"selected":""}>Vacation</option><option ${existing.decision==="Next Month Buffer"?"selected":""}>Next Month Buffer</option></select></div><div class="input-block"><label>Amount to Move</label><input type="number" inputmode="decimal" id="closeoutAmount" value="${existing.amount ?? Math.max(0, t.actualRemaining)}"></div></div><div><label>What needs adjusting next month?</label><textarea id="closeoutNote">${existing.note || ""}</textarea></div><div class="button-row"><button class="primary" id="saveCloseoutBtn">Save Closeout</button></div>`;
       document.getElementById("saveCloseoutBtn").addEventListener("click", () => { state.closeouts[key] = { decision: document.getElementById("closeoutDecision").value, amount: num(document.getElementById("closeoutAmount").value), note: document.getElementById("closeoutNote").value, savedAt: todayIso() }; saveState(); });
     }
 
     function renderYearTable() {
       let html = `<thead><tr><th>Metric</th>${months.map(m=>`<th>${m}</th>`).join("")}<th>Total</th></tr></thead><tbody>`;
-      [["Actual Income","actualIncome"],["Actual Savings","actualSavings"],["Actual Expenses","actualExpenses"],["Flexible Expenses","flexibleExpenses"],["Future Set-Aside","futureAllocation"],["Roth / Extra Investing","rothOverflow"],["Actual Remaining","actualRemaining"],["Planned Remaining","plannedRemaining"]].forEach(([label,key])=>{ let total=0; html += `<tr><td>${label}</td>`; months.forEach((_,m)=>{ const v=totalsForMonth(m)[key]; total += v; const cls = key.includes("Remaining") ? (v>=0?"good":"bad") : "neutral"; html += `<td><span class="status ${cls}">${money(v)}</span></td>`; }); html += `<td><strong>${money(total)}</strong></td></tr>`; });
+      [["Actual Income","actualIncome"],["Actual Savings","actualSavings"],["Actual Expenses","actualExpenses"],["Flexible Expenses","flexibleExpenses"],["Future Set-Aside","futureAllocation"],["Leftover / Extra Saving","extraSaving"],["Actual Remaining","actualRemaining"],["Planned Remaining","plannedRemaining"]].forEach(([label,key])=>{ let total=0; html += `<tr><td>${label}</td>`; months.forEach((_,m)=>{ const v=totalsForMonth(m)[key]; total += v; const cls = key.includes("Remaining") ? (v>=0?"good":"bad") : "neutral"; html += `<td><span class="status ${cls}">${money(v)}</span></td>`; }); html += `<td><strong>${money(total)}</strong></td></tr>`; });
       html += `</tbody>`; document.getElementById("yearTable").innerHTML = html;
     }
 
     function renderSettings() {
-      ["monthlyIncome","checkingTarget","hysaTarget","commissionTax","extraTaxReserve","rothFromCommissionPct","lowBufferTrigger","weeklyScoreGoal","backupReminderDays"].forEach(id => document.getElementById(id).value = state.settings[id]);
+      ["checkingTarget","hysaTarget","lowBufferTrigger","weeklyScoreGoal","backupReminderDays"].forEach(id => document.getElementById(id).value = state.settings[id]);
       let html = `<thead><tr><th>Category</th><th>Type</th><th>Fixed/Flexible</th><th>Monthly Planned</th></tr></thead><tbody>`;
-      state.categories.forEach((cat, idx) => { if (cat.name === "Base Salary / Take-Home") return; html += `<tr><td>${cat.group} · ${cat.name}</td><td>${cat.type}</td><td><select class="behavior-input" data-idx="${idx}"><option ${cat.behavior==="fixed"?"selected":""}>fixed</option><option ${cat.behavior==="flexible"?"selected":""}>flexible</option><option ${cat.behavior==="savings"?"selected":""}>savings</option><option ${cat.behavior==="income"?"selected":""}>income</option></select></td><td><input class="money-input planned-input" type="number" inputmode="decimal" data-idx="${idx}" value="${cat.planned}" step="10" /></td></tr>`; });
+      state.categories.forEach((cat, idx) => { html += `<tr><td>${cat.group} · ${cat.name}</td><td>${cat.type}</td><td><select class="behavior-input" data-idx="${idx}"><option ${cat.behavior==="fixed"?"selected":""}>fixed</option><option ${cat.behavior==="flexible"?"selected":""}>flexible</option><option ${cat.behavior==="savings"?"selected":""}>savings</option><option ${cat.behavior==="income"?"selected":""}>income</option></select></td><td><input class="money-input planned-input" type="number" inputmode="decimal" data-idx="${idx}" value="${cat.planned}" step="10" /></td></tr>`; });
       html += `</tbody>`; document.getElementById("settingsTable").innerHTML = html;
       document.querySelectorAll(".planned-input").forEach(i => i.addEventListener("input", e => { state.categories[e.target.dataset.idx].planned = num(e.target.value); saveState(); }));
       document.querySelectorAll(".behavior-input").forEach(i => i.addEventListener("change", e => { state.categories[e.target.dataset.idx].behavior = e.target.value; saveState(); }));
@@ -730,19 +762,28 @@
     document.querySelectorAll(".tab").forEach(tab => tab.addEventListener("click", () => { document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active")); document.querySelectorAll(".section").forEach(s=>s.classList.remove("active")); tab.classList.add("active"); document.getElementById(tab.dataset.tab).classList.add("active"); }));
     document.getElementById("yearSelect").addEventListener("change", e => { selectedYear = Number(e.target.value); state = loadState(selectedYear); updateGoalContributions(); renderAll(); });
     document.getElementById("monthSelect").addEventListener("change", e => { selectedMonth = Number(e.target.value); renderAll(); });
-    ["monthlyIncome","checkingTarget","hysaTarget","commissionTax","extraTaxReserve","rothFromCommissionPct","lowBufferTrigger","weeklyScoreGoal","backupReminderDays"].forEach(id => document.getElementById(id).addEventListener("input", e => { state.settings[id] = num(e.target.value); saveState(); }));
-    ["grossCommission","commissionChecking","commissionHysa"].forEach(id => document.getElementById(id).addEventListener("input", renderCommissionPreview));
+    ["checkingTarget","hysaTarget","lowBufferTrigger","weeklyScoreGoal","backupReminderDays"].forEach(id => document.getElementById(id).addEventListener("input", e => { state.settings[id] = num(e.target.value); saveState(); }));
+    ["netCommission","commissionChecking","commissionHysa"].forEach(id => document.getElementById(id).addEventListener("input", renderCommissionPreview));
     ["checkingBalance","hysaBalance"].forEach(id => document.getElementById(id).addEventListener("input", e => { state.balances[id === "checkingBalance" ? "checking" : "hysa"] = num(e.target.value); saveState(); }));
     document.querySelectorAll(".quick-preset").forEach(btn => btn.addEventListener("click", () => { const i = document.getElementById("quickAmount"); if (btn.dataset.clear) { i.value = ""; i.focus(); return; } i.value = num(i.value) + num(btn.dataset.amount); i.focus(); }));
     document.getElementById("quickAddBtn").addEventListener("click", () => { addTransaction(document.getElementById("quickDate").value, document.getElementById("quickCategory").value, document.getElementById("quickAmount").value); document.getElementById("quickAmount").value = ""; });
     document.getElementById("addTxBtn").addEventListener("click", () => { addTransaction(document.getElementById("txDate").value, document.getElementById("txCategory").value, document.getElementById("txAmount").value, document.getElementById("txMerchant").value, document.getElementById("txNote").value); ["txAmount","txMerchant","txNote"].forEach(id=>document.getElementById(id).value=""); });
     document.getElementById("addFutureBtn").addEventListener("click", () => { const name = document.getElementById("futureName").value || "Future Expense"; const date = document.getElementById("futureDate").value; const amount = num(document.getElementById("futureAmount").value); if (!date || amount <= 0) return alert("Enter a due date and amount."); state.futureExpenses.push({ id: uid(), name, date, amount, priority: document.getElementById("futurePriority").value }); ["futureName","futureDate","futureAmount"].forEach(id=>document.getElementById(id).value=""); saveState(); });
-    document.getElementById("addCommissionBtn").addEventListener("click", () => { const gross = num(document.getElementById("grossCommission").value); if (gross <= 0) return alert("Enter a gross commission amount first."); const checking = num(document.getElementById("commissionChecking").value), hysa = num(document.getElementById("commissionHysa").value), calc = calculateCommission(gross, checking, hysa); state.commissions.push({ id: uid(), date: document.getElementById("commissionDate").value, gross, checkingAtTime: checking, hysaAtTime: hysa, ...calc }); state.balances.checking = checking + calc.toChecking; state.balances.hysa = hysa + calc.toHysa; document.getElementById("grossCommission").value = ""; markDailyDone(); updateGoalContributions(); saveState(); });
+    document.getElementById("addCommissionBtn").addEventListener("click", () => { const received = num(document.getElementById("netCommission").value); if (received <= 0) return alert("Enter the commission amount that hit your bank account first."); const checking = num(document.getElementById("commissionChecking").value), hysa = num(document.getElementById("commissionHysa").value), calc = calculateCommission(received, checking, hysa); state.commissions.push({ id: uid(), date: document.getElementById("commissionDate").value, received, checkingAtTime: checking, hysaAtTime: hysa, ...calc }); state.balances.checking = checking + calc.toChecking; state.balances.hysa = hysa + calc.toHysa; document.getElementById("netCommission").value = ""; markDailyDone(); updateGoalContributions(); saveState(); });
     document.getElementById("saveBtn").addEventListener("click", () => saveState());
     document.getElementById("resetBtn").addEventListener("click", () => { if (!confirm("Export a backup first if you care about this data. Reset this year now?")) return; localStorage.removeItem(stateKeyPrefix + selectedYear); state = freshState(selectedYear); renderAll(); });
-    document.getElementById("exportBtn").addEventListener("click", () => { state.lastBackupDate = todayIso(); saveState(false); const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" }); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = `budget-${selectedYear}-backup.json`; a.click(); URL.revokeObjectURL(url); renderAll(); });
+    document.getElementById("exportBtn").addEventListener("click", () => { state.lastBackupDate = todayIso(); saveState(false); const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" }); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = `chicago-budget-sept-2026-sept-2027-backup.json`; a.click(); URL.revokeObjectURL(url); renderAll(); });
     document.getElementById("importBtn").addEventListener("click", () => document.getElementById("importFile").click());
     document.getElementById("importFile").addEventListener("change", e => { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = () => { try { state = mergeDefaults(JSON.parse(reader.result), freshState(selectedYear)); state.year = selectedYear; updateGoalContributions(); saveState(); } catch { alert("That JSON file could not be imported."); } }; reader.readAsText(file); });
+
+
+    const advancedToggle = document.getElementById("advancedToggle");
+    if (advancedToggle) {
+      advancedToggle.addEventListener("click", () => {
+        document.body.classList.toggle("advanced-mode");
+        advancedToggle.textContent = document.body.classList.contains("advanced-mode") ? "Hide Advanced Tools" : "Show Advanced Tools";
+      });
+    }
 
     updateGoalContributions(); renderAll();
   </script>
