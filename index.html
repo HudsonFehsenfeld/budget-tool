@@ -162,9 +162,6 @@
     .footer-note { margin-top: 16px; color: var(--muted); font-size: 0.88rem; text-align: center; }
     .version { color: var(--muted); font-weight: 900; font-size: 0.82rem; }
 
-
-
-    /* Budget Lite simplification */
     .advanced-actions { justify-content: flex-end; }
     .lite-intro {
       display: grid;
@@ -203,9 +200,11 @@
     .tabs .advanced-tab { display: none; }
     .advanced-mode .tabs .advanced-tab { display: block; }
     .lite-chip { display:inline-flex; align-items:center; padding: 6px 10px; border-radius:999px; background:var(--blue-soft); color:var(--blue); font-weight:900; font-size:.82rem; }
-    @media (max-width: 950px) { .lite-intro { grid-template-columns: 1fr; } .advanced-toggle-row { justify-content: stretch; } #advancedToggle { width: 100%; } }
 
     @media (max-width: 950px) {
+      .lite-intro { grid-template-columns: 1fr; }
+      .advanced-toggle-row { justify-content: stretch; }
+      #advancedToggle { width: 100%; }
       header { padding-top: 18px; }
       .summary-grid, .two-col, .three-col, .form-grid, .mobile-first-grid, .mini-grid { grid-template-columns: 1fr; }
       .top-actions > *, .tabs > * { flex: 1; }
@@ -227,7 +226,7 @@
   <header>
     <div class="version">Chicago Budget First Year: Sept 2026 to Sept 2027</div>
     <h1>Chicago First-Year Budget</h1>
-    <p class="subtitle">A simple everyday budget for Chicago: log spending, check what is left this month, and stay on track without overthinking it.</p>
+    <p class="subtitle">A simple everyday budget for Chicago: fixed take-home income of $3,350 per month, planned investments of $625 per month, and quick spending check-ins so you can stay controlled without overthinking it.</p>
     <div class="top-actions advanced-actions">
       <select id="yearSelect" aria-label="Budget period"></select>
       <button class="primary" id="saveBtn">Save Now</button>
@@ -251,13 +250,13 @@
         <div class="simple-steps">
           <div class="simple-step"><span class="step-number">1</span><div><div class="lite-title">Log purchases as they happen</div><div class="small-note">Use the quick expense box below. Do not overthink notes or details unless you actually need them.</div></div></div>
           <div class="simple-step"><span class="step-number">2</span><div><div class="lite-title">Check what is left</div><div class="small-note">Use the Today and This Month tabs to see if you are on pace.</div></div></div>
-          <div class="simple-step"><span class="step-number">3</span><div><div class="lite-title">Protect goals first</div><div class="small-note">Use the Goals tab for savings, future expenses, and longer-term money decisions.</div></div></div>
+          <div class="simple-step"><span class="step-number">3</span><div><div class="lite-title">Protect investments first</div><div class="small-note">The budget automatically plans $625 per month toward investments before lifestyle spending gets counted as extra.</div></div></div>
         </div>
       </div>
       <div class="card">
         <div class="section-title"><h2>Simple Rule</h2></div>
-        <p class="metric-value" style="font-size:1.65rem;">Try to spend less than planned. Adjust monthly if necessary.</p>
-        <p class="metric-note">Advanced tools are still available, but they are hidden so the budget feels easier to use day to day.</p>
+        <p class="metric-value" style="font-size:1.65rem;">Live off the plan. Save the leftover.</p>
+        <p class="metric-note">Your income is set at $3,350 per month, but do not let the whole number turn into lifestyle spending. The goal is control, not perfection.</p>
         <div class="advanced-toggle-row"><button id="advancedToggle" class="soft">Show Advanced Tools</button></div>
       </div>
     </section>
@@ -376,7 +375,7 @@
           <div class="section-title"><h2>Add Commission Check</h2></div>
           <div class="form-grid">
             <div class="input-block"><label>Date Received</label><input type="date" id="commissionDate" /></div>
-            <div class="input-block"><label>Commission Received (After Tax)</label><input type="number" inputmode="decimal" id="netCommission" min="0" step="50" placeholder="1200" /></div>
+            <div class="input-block"><label>Commission Received (After Tax)</label><input type="number" inputmode="decimal" id="netCommission" min="0" step="50" placeholder="1150" /></div>
             <div class="input-block"><label>Checking Balance</label><input type="number" inputmode="decimal" id="commissionChecking" min="0" step="50" /></div>
             <div class="input-block"><label>HYSA Balance</label><input type="number" inputmode="decimal" id="commissionHysa" min="0" step="50" /></div>
           </div>
@@ -415,7 +414,7 @@
 
     <section id="yoy" class="section card">
       <div class="section-title"><h2>First-Year View</h2></div>
-      <p class="small-note" style="margin-bottom:12px;">Use this tab to compare September 2026 through September 2027 side by side and spot trends across your first year It helps you see whether your lifestyle is staying controlled as income, commissions, and spending change.</p>
+      <p class="small-note" style="margin-bottom:12px;">Use this tab to compare September 2026 through September 2027 side by side and spot trends across your first year. It helps you see whether your lifestyle is staying controlled as income, commissions, and spending change.</p>
       <div class="table-wrap"><table id="yearTable"></table></div>
     </section>
 
@@ -439,25 +438,25 @@
     const months = ["Sep 2026", "Oct 2026", "Nov 2026", "Dec 2026", "Jan 2027", "Feb 2027", "Mar 2027", "Apr 2027", "May 2027", "Jun 2027", "Jul 2027", "Aug 2027", "Sep 2027"];
     const fullMonths = ["September 2026", "October 2026", "November 2026", "December 2026", "January 2027", "February 2027", "March 2027", "April 2027", "May 2027", "June 2027", "July 2027", "August 2027", "September 2027"];
     const budgetStartYear = 2026;
-    const budgetStartMonth = 8; // September, zero-indexed
+    const budgetStartMonth = 8;
     const budgetMonths = months.map((_, i) => new Date(budgetStartYear, budgetStartMonth + i, 1));
     const todayIso = () => new Date().toISOString().slice(0, 10);
-    const stateKeyPrefix = "chicagoBudgetLite_sept2026_v1_";
+    const stateKeyPrefix = "chicagoBudgetLite_sept2026_v2_";
     let selectedYear = 2026;
     let selectedMonth = 0;
 
     const defaultCategories = [
-      { group: "Income", name: "Base Salary / Take-Home", type: "income", behavior: "income", planned: 0 },
+      { group: "Income", name: "Fixed Monthly Take-Home Pay", type: "income", behavior: "income", planned: 3350 },
       { group: "Income", name: "Side Income", type: "income", behavior: "income", planned: 0 },
-      { group: "Savings", name: "HYSA Savings", type: "savings", behavior: "savings", planned: 500, goalKey: "hysa" },
-      { group: "Savings", name: "Investments", type: "savings", behavior: "savings", planned: 210, goalKey: "emergency" },
-      { group: "Savings", name: "Vacation Savings", type: "savings", behavior: "savings", planned: 300, goalKey: "vacation" },
+      { group: "Savings", name: "HYSA Savings", type: "savings", behavior: "savings", planned: 0, goalKey: "hysa" },
+      { group: "Savings", name: "Investments", type: "savings", behavior: "savings", planned: 625, goalKey: "investments" },
+      { group: "Savings", name: "Vacation Savings", type: "savings", behavior: "savings", planned: 0, goalKey: "vacation" },
       { group: "Home", name: "Rent", type: "expense", behavior: "fixed", planned: 1500 },
       { group: "Home", name: "Utilities", type: "expense", behavior: "flexible", planned: 50 },
       { group: "Home", name: "Streaming Services", type: "expense", behavior: "fixed", planned: 50 },
-      { group: "Home", name: "Renters Insurance", type: "expense", behavior: "fixed", planned: 0 },
-      { group: "Transportation", name: "Public Transportation / Transit", type: "expense", behavior: "fixed", planned: 0 },
-      { group: "Transportation", name: "Uber / Rideshare", type: "expense", behavior: "flexible", planned: 100 },
+      { group: "Home", name: "Renters Insurance", type: "expense", behavior: "fixed", planned: 15 },
+      { group: "Transportation", name: "Public Transportation / Transit", type: "expense", behavior: "fixed", planned: 75 },
+      { group: "Transportation", name: "Uber / Rideshare", type: "expense", behavior: "flexible", planned: 75 },
       { group: "Transportation", name: "Car Payment", type: "expense", behavior: "fixed", planned: 0 },
       { group: "Transportation", name: "Fuel", type: "expense", behavior: "flexible", planned: 0 },
       { group: "Transportation", name: "Auto Insurance", type: "expense", behavior: "fixed", planned: 0 },
@@ -465,22 +464,22 @@
       { group: "Health", name: "Health Insurance", type: "expense", behavior: "fixed", planned: 0 },
       { group: "Health", name: "Medical Out-of-Pocket", type: "expense", behavior: "flexible", planned: 50 },
       { group: "Health", name: "Dental / Vision", type: "expense", behavior: "fixed", planned: 0 },
-      { group: "Daily Living", name: "Groceries", type: "expense", behavior: "flexible", planned: 200 },
-      { group: "Daily Living", name: "Dining Out / Date Nights", type: "expense", behavior: "flexible", planned: 150 },
-      { group: "Entertainment", name: "Fun / Social", type: "expense", behavior: "flexible", planned: 150 },
-      { group: "Entertainment", name: "Clothing / Shoes", type: "expense", behavior: "flexible", planned: 150 },
-      { group: "Entertainment", name: "Hobbies / Recreation", type: "expense", behavior: "flexible", planned: 100 },
-      { group: "Personal and Family", name: "Personal Care", type: "expense", behavior: "flexible", planned: 75 },
+      { group: "Daily Living", name: "Groceries", type: "expense", behavior: "flexible", planned: 300 },
+      { group: "Daily Living", name: "Dining Out / Date Nights", type: "expense", behavior: "flexible", planned: 175 },
+      { group: "Entertainment", name: "Fun / Social", type: "expense", behavior: "flexible", planned: 175 },
+      { group: "Entertainment", name: "Clothing / Shoes", type: "expense", behavior: "flexible", planned: 75 },
+      { group: "Entertainment", name: "Hobbies / Recreation", type: "expense", behavior: "flexible", planned: 75 },
+      { group: "Personal and Family", name: "Personal Care", type: "expense", behavior: "flexible", planned: 50 },
       { group: "Personal and Family", name: "Haircut / Products", type: "expense", behavior: "flexible", planned: 50 },
       { group: "Personal and Family", name: "Gifts / Celebrations", type: "expense", behavior: "flexible", planned: 50 },
       { group: "Giving", name: "Charitable Contributions", type: "expense", behavior: "flexible", planned: 0 },
       { group: "Other", name: "Debt Payments", type: "expense", behavior: "fixed", planned: 0 },
       { group: "Other", name: "Miscellaneous", type: "expense", behavior: "flexible", planned: 50 },
-      { group: "Other", name: "Irregular / Annual Expenses", type: "expense", behavior: "flexible", planned: 150 }
+      { group: "Other", name: "Irregular / Annual Expenses", type: "expense", behavior: "flexible", planned: 100 }
     ];
 
     const defaultGoals = {
-      emergency: { name: "Investments", target: 2500, current: 0 },
+      investments: { name: "Investments", target: 7500, current: 0 },
       hysa: { name: "HYSA", target: 13500, current: 0 },
       vacation: { name: "Vacation Fund", target: 3600, current: 0 }
     };
@@ -503,8 +502,42 @@
       };
     }
 
+    function normalizeCategories(categories) {
+      const normalized = categories || JSON.parse(JSON.stringify(defaultCategories));
+      normalized.forEach(cat => {
+        if (cat.name === "Base Salary / Take-Home") {
+          cat.name = "Fixed Monthly Take-Home Pay";
+          cat.planned = 3350;
+        }
+        if (cat.name === "Investments") {
+          cat.planned = 625;
+          cat.goalKey = "investments";
+        }
+      });
+      return normalized;
+    }
+
     function mergeDefaults(saved, fresh) {
-      return { ...fresh, ...saved, settings: { ...fresh.settings, ...(saved.settings || {}) }, goals: { ...fresh.goals, ...(saved.goals || {}) }, balances: { ...fresh.balances, ...(saved.balances || {}) }, categories: saved.categories || fresh.categories, manualActuals: saved.manualActuals || saved.actuals || fresh.manualActuals, transactions: saved.transactions || [], futureExpenses: saved.futureExpenses || [], commissions: saved.commissions || [], dailyLog: saved.dailyLog || fresh.dailyLog, closeouts: saved.closeouts || {}, lastBackupDate: saved.lastBackupDate || "" };
+      const mergedGoals = { ...fresh.goals, ...(saved.goals || {}) };
+      if (mergedGoals.emergency && !mergedGoals.investments) {
+        mergedGoals.investments = { name: "Investments", target: 7500, current: 0 };
+        delete mergedGoals.emergency;
+      }
+      return {
+        ...fresh,
+        ...saved,
+        settings: { ...fresh.settings, ...(saved.settings || {}) },
+        goals: mergedGoals,
+        balances: { ...fresh.balances, ...(saved.balances || {}) },
+        categories: normalizeCategories(saved.categories || fresh.categories),
+        manualActuals: saved.manualActuals || saved.actuals || fresh.manualActuals,
+        transactions: saved.transactions || [],
+        futureExpenses: saved.futureExpenses || [],
+        commissions: saved.commissions || [],
+        dailyLog: saved.dailyLog || fresh.dailyLog,
+        closeouts: saved.closeouts || {},
+        lastBackupDate: saved.lastBackupDate || ""
+      };
     }
 
     function loadState(year) {
@@ -548,21 +581,17 @@
       const cat = state.categories[idx];
       const txTotal = transactionActualForCategory(monthIndex, idx);
 
-      // Fixed expenses are assumed to happen every month automatically.
-      // Manual add-ons and transactions are added on top only if needed.
       if (cat.type === "expense") {
         const manual = num(state.manualActuals[monthIndex]?.[idx] || 0);
         if (cat.behavior === "fixed") return categoryPlanned(cat) + txTotal + manual;
         return txTotal + manual;
       }
 
-      // Savings and income default to planned amounts unless manually changed.
       return state.manualActuals[monthIndex]?.[idx] ?? categoryPlanned(cat);
     }
 
     function futureMonthlyAllocation(monthIndex) {
       const monthStart = budgetMonths[monthIndex];
-      const monthEnd = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0);
       return state.futureExpenses.reduce((sum, f) => {
         if (!f.date || num(f.amount) <= 0) return sum;
         const due = new Date(f.date + "T00:00:00");
@@ -610,7 +639,7 @@
     function renderMonthOptions() { document.getElementById("monthSelect").innerHTML = months.map((m,i)=>`<option value="${i}" ${i===selectedMonth?"selected":""}>${fullMonths[i]}</option>`).join(""); }
 
     function renderSummary() {
-      const t = totalsForMonth(selectedMonth); const y = yearTotals(); const weekLeft = weeklyFlexibleBudget() - thisWeekSpent();
+      const t = totalsForMonth(selectedMonth); const weekLeft = weeklyFlexibleBudget() - thisWeekSpent();
       const cards = [["Income", money(t.actualIncome), `Planned: ${money(t.plannedIncome)}`], ["Expenses", money(t.actualExpenses), `Planned: ${money(t.plannedExpenses)}`], ["Flexible Left This Week", money(weekLeft), `Weekly budget: ${money(weeklyFlexibleBudget())}`], ["Leftover / Extra Saving", money(t.extraSaving), "After spending and planned savings"]];
       document.getElementById("summaryCards").innerHTML = cards.map(c => `<div class="card"><div class="metric-title">${c[0]}</div><div class="metric-value">${c[1]}</div><div class="metric-note">${c[2]}</div></div>`).join("");
     }
@@ -691,17 +720,14 @@
 
     function calculateCommission(received, checking, hysa) {
       const distributable = Math.max(0, num(received));
-
       const longTerm = distributable * 0.6;
       const investAlloc = longTerm;
       const cashBuffer = distributable * 0.2;
       const lifestyle = distributable * 0.2;
-
       const toChecking = Math.min(Math.max(num(state.settings.checkingTarget) - checking, 0), cashBuffer);
       const remainingBuffer = cashBuffer - toChecking;
       const toHysa = Math.min(Math.max(num(state.settings.hysaTarget) - hysa, 0), remainingBuffer);
       const excess = Math.max(remainingBuffer - toHysa, 0);
-
       return { received: distributable, net: distributable, distributable, longTerm, investAlloc, cashBuffer, lifestyle, toChecking, toHysa, excess };
     }
 
@@ -718,13 +744,20 @@
     }
 
     function updateGoalContributions() {
-      const base = JSON.parse(JSON.stringify(defaultGoals)); Object.keys(state.goals).forEach(k => { if (!base[k]) base[k] = state.goals[k]; base[k].target = num(state.goals[k].target); base[k].current = 0; });
+      const base = JSON.parse(JSON.stringify(defaultGoals));
+      Object.keys(state.goals).forEach(k => {
+        if (k === "emergency") return;
+        if (!base[k]) base[k] = state.goals[k];
+        base[k].target = num(state.goals[k].target || base[k].target);
+        base[k].current = 0;
+      });
       state.categories.forEach((cat, idx) => { if (!cat.goalKey) return; months.forEach((_, m) => base[cat.goalKey].current += num(actualForCategory(m, idx))); });
       state.commissions.forEach(c => {
         base.hysa.current += num(c.toHysa);
-        base.emergency.current += num(c.investAlloc);
+        base.investments.current += num(c.investAlloc);
       });
-      Object.keys(base).forEach(k => state.goals[k].current = base[k].current);
+      Object.keys(base).forEach(k => state.goals[k] = base[k]);
+      delete state.goals.emergency;
     }
 
     function renderGoals() {
@@ -753,8 +786,8 @@
       let html = `<thead><tr><th>Category</th><th>Type</th><th>Fixed/Flexible</th><th>Monthly Planned</th></tr></thead><tbody>`;
       state.categories.forEach((cat, idx) => { html += `<tr><td>${cat.group} · ${cat.name}</td><td>${cat.type}</td><td><select class="behavior-input" data-idx="${idx}"><option ${cat.behavior==="fixed"?"selected":""}>fixed</option><option ${cat.behavior==="flexible"?"selected":""}>flexible</option><option ${cat.behavior==="savings"?"selected":""}>savings</option><option ${cat.behavior==="income"?"selected":""}>income</option></select></td><td><input class="money-input planned-input" type="number" inputmode="decimal" data-idx="${idx}" value="${cat.planned}" step="10" /></td></tr>`; });
       html += `</tbody>`; document.getElementById("settingsTable").innerHTML = html;
-      document.querySelectorAll(".planned-input").forEach(i => i.addEventListener("input", e => { state.categories[e.target.dataset.idx].planned = num(e.target.value); saveState(); }));
-      document.querySelectorAll(".behavior-input").forEach(i => i.addEventListener("change", e => { state.categories[e.target.dataset.idx].behavior = e.target.value; saveState(); }));
+      document.querySelectorAll(".planned-input").forEach(i => i.addEventListener("input", e => { state.categories[e.target.dataset.idx].planned = num(e.target.value); updateGoalContributions(); saveState(); }));
+      document.querySelectorAll(".behavior-input").forEach(i => i.addEventListener("change", e => { state.categories[e.target.dataset.idx].behavior = e.target.value; updateGoalContributions(); saveState(); }));
     }
 
     function renderAll() { renderYearOptions(); renderMonthOptions(); renderCategorySelectors(); renderSummary(); renderCoach(); renderMonthlyTable(); renderTransactions(); renderWeekly(); renderFuture(); renderCommissionPreview(); renderCommissionHistory(); renderGoals(); renderCloseout(); renderYearTable(); renderSettings(); }
@@ -775,7 +808,6 @@
     document.getElementById("exportBtn").addEventListener("click", () => { state.lastBackupDate = todayIso(); saveState(false); const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" }); const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = `chicago-budget-sept-2026-sept-2027-backup.json`; a.click(); URL.revokeObjectURL(url); renderAll(); });
     document.getElementById("importBtn").addEventListener("click", () => document.getElementById("importFile").click());
     document.getElementById("importFile").addEventListener("change", e => { const file = e.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = () => { try { state = mergeDefaults(JSON.parse(reader.result), freshState(selectedYear)); state.year = selectedYear; updateGoalContributions(); saveState(); } catch { alert("That JSON file could not be imported."); } }; reader.readAsText(file); });
-
 
     const advancedToggle = document.getElementById("advancedToggle");
     if (advancedToggle) {
